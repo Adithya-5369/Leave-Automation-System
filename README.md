@@ -37,16 +37,6 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 
 ---
 
-## 🔄 Workflow Overview
-
-1. User logs in via OTP
-2. Leaves are submitted by Adhoc Faculty/Staff
-3. Routed for approval to HoD → Dean FA → Registrar/Dy Director based on leave type and designation
-4. Each stage updates approval status and triggers notifications
-5. Leave balances and logs are updated in real-time
-
----
-
 ## 🔁 System Workflow
 
 1. **Secure Login with OTP**  
