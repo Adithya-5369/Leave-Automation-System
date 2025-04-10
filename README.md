@@ -47,6 +47,39 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 
 ---
 
+## 🔁 System Workflow
+
+1. **Secure Login with OTP**  
+   - Ensures authenticated access with email & OTP verification.
+
+2. **User Dashboard**  
+   - Displays leave balances, status of leave requests, and quick actions.
+
+3. **Leave Request Submission**  
+   - Input leave type, duration, and reason via a clean, responsive UI.
+
+4. **Multi-Level Approval Flow**  
+   - Requests are routed to:
+     - Head of Department (HoD)
+     - Dean FA
+     - Registrar
+     - Deputy Director
+     - Additional Deans, if applicable
+
+5. **Real-Time Notifications**  
+   - Automated alerts for each approval stage.
+
+6. **Live Status Tracking**  
+   - Employees and admins can track current request status.
+
+7. **Automated Leave Balance Update**  
+   - Once approved, the system updates records in real time.
+
+8. **Audit Logs**  
+   - Maintains records for future reviews and reports.
+
+---
+
 ## 📊 Key Features
 
 - Role-based access control and routing logic
