@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+// import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 // Components
 import Login from './components/auth/Login';
+import Register from './components/auth/Register';
+import ResetPassword from './components/auth/ResetPassword';
 import Dashboard from './components/dashboard/Dashboard';
 import LeaveApplication from './components/leaves/LeaveApplication';
 import LeaveStatus from './components/leaves/LeaveStatus';
@@ -22,6 +24,8 @@ function App() {
       <Toaster position="top-right" />
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />

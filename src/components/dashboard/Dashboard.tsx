@@ -13,6 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 import { LeaveBalance, LeaveApplication, LEAVE_TYPES } from '../../types/leave';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, differenceInDays } from 'date-fns';
+import { isApprover, isAdhoc} from '../../utils/roleHelpers';
 
 // Mock data
 const mockLeaveBalances: LeaveBalance[] = [
@@ -198,7 +199,8 @@ const Dashboard: React.FC = () => {
     setLeaveBalances(mockLeaveBalances);
     setRecentLeaves(mockRecentLeaves);
     
-    if (user && ['hod', 'dean', 'director', 'registrar'].includes(user.role)) {
+    if (isApprover(user?.role)) // user && ['hod', 'dean', 'director', 'registrar'].includes(user.role)
+    {
       setPendingApprovals(mockPendingApprovals);
     }
   }, [user]);
@@ -225,7 +227,7 @@ const Dashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Welcome section */}
       <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow-md p-6 text-white">
-        <h1 className="text-2xl font-bold">Welcome, {user?.name}!</h1>
+        <h1 className="text-2xl font-bold">Welcome, {user?.name || 'User'}!</h1>
         <p className="mt-1 text-orange-100">
           {user?.role === 'adhoc' && 'Adhoc Faculty'}
           {user?.role === 'faculty' && 'Faculty'}
@@ -294,7 +296,7 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {leaveBalances
             .filter((leave) => {
-              if (user?.role === 'adhoc') {
+              if (isAdhoc(user?.role)) { //user?.role === 'adhoc'
                 return leave.leaveType === 'AHL'; // Show only AHL for adhoc users
               } else {
                 return leave.leaveType !== 'AHL'; // Show all except AHL for non adhoc users
@@ -446,7 +448,7 @@ const Dashboard: React.FC = () => {
       </div>
       
       {/* Pending approvals section for approvers */}
-      {user && ['hod', 'dean', 'registrar', 'director'].includes(user.role) && pendingApprovals.length > 0 && (
+      {isApprover(user?.role) && pendingApprovals.length > 0 && (
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-800">Pending Approvals</h2>

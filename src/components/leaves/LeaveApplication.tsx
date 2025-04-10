@@ -22,7 +22,16 @@ const role = user?.role;
   
   const selectedPolicy = LEAVE_POLICIES.find(policy => policy.leaveType === leaveType);
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const getApprovalChain = (leaveType: LeaveType, role: string): string[] => {
+    const leavePolicy = LEAVE_POLICIES.find(p => p.leaveType === leaveType);
+    if (!leavePolicy) return [];
+  
+    // Shorten 'dean fa' → 'deanfa'
+    return leavePolicy.approvalHierarchy.map(r => r.replace(/\s/g, ''));
+  };
+  
+
+  /* const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!startDate || !endDate || !reason) {
@@ -52,14 +61,74 @@ const role = user?.role;
     } finally {
       setIsSubmitting(false);
     }
+  }; */
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+  
+    if (!startDate || !endDate || !reason) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+  
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+  
+    if (end < start) {
+      toast.error('End date cannot be before start date');
+      return;
+    }
+  
+    setIsSubmitting(true);
+  
+    try {
+      const approvalChain = getApprovalChain(leaveType, user?.role || '');
+      const formDataToSend = new FormData();
+  
+      formDataToSend.append('leaveType', leaveType);
+      formDataToSend.append('startDate', startDate);
+      formDataToSend.append('endDate', endDate);
+      formDataToSend.append('reason', reason);
+      formDataToSend.append('isUrgent', String(isUrgent));
+      formDataToSend.append('alternateArrangements', alternateArrangements);
+      formDataToSend.append('contactDuringLeave', contactDuringLeave);
+      formDataToSend.append('applicantId', user?.id || '');
+      formDataToSend.append('applicantName', user?.name || '');
+      formDataToSend.append('applicantDepartment', user?.department || '');
+      formDataToSend.append('approvalChain', JSON.stringify(approvalChain));
+      formDataToSend.append('currentApprover', approvalChain[0]);
+  
+      documents.forEach((file) => {
+        formDataToSend.append('documents', file);
+      });
+  
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/leave/apply`, {
+        method: 'POST',
+        body: formDataToSend,
+      });
+  
+      const data: { message: string } = await response.json();
+  
+      if (!response.ok) throw new Error(data.message || 'Submission failed');
+  
+      toast.success('Leave application submitted successfully!');
+      navigate('/leave-status');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit leave application';
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+  
+  
+
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setDocuments(Array.from(e.target.files));
     }
   };
-  
   
   // Filter available leave types based on user role
   const availableLeaveTypes = Object.entries(LEAVE_TYPES).filter(([type]) => {

@@ -1,5 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 export type UserRole = 'adhoc' | 'faculty' | 'hod' | 'dean' | 'registrar' | 'director' | 'admin';
 export type EmployeeType = 'regular' | 'adhoc' | 'outsourced';
@@ -100,12 +102,14 @@ const mockUsers = [
 ];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  const navigate = useNavigate(); // import this from react-router-dom
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [tempUser, setTempUser] = useState<any>(null);
   const [otpSent, setOtpSent] = useState<boolean>(false);
 
-  useEffect(() => {
+  /* useEffect(() => {
     // Check for stored user in localStorage
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -118,9 +122,83 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     window.addEventListener('beforeunload', handleUnload);
     return () => window.removeEventListener('beforeunload', handleUnload);
-  }, []);
+  }, []); */
 
-  const login = async (email: string, password: string): Promise<void> => {
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    const isLoginPage = window.location.pathname === '/login';
+  
+    // ✅ Restore user
+    try {
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser && parsedUser.email && parsedUser.role) {
+          setUser(parsedUser);
+        } else {
+          localStorage.removeItem('user');
+        }
+      }
+    } catch {
+      localStorage.removeItem('user');
+    }
+  
+    setIsLoading(false);
+  
+      // ✅ Show confirmation popup on refresh/tab close
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isLoginPage && storedUser) {
+        const confirmationMessage = "You are about to be logged out. Are you sure you want to leave?";
+        e.preventDefault();
+        e.returnValue = confirmationMessage; // 👈 Required for Chrome
+        return confirmationMessage;          // 👈 Required for some other browsers
+      }
+    };
+
+    // ✅ Logout silently on actual unload (tab close or refresh)
+    const handleUnload = () => {
+      if (!isLoginPage && storedUser) {
+        localStorage.removeItem('user'); // Clear user
+        sessionStorage.clear(); // 🔒 Clear session data if needed
+      }
+    };
+  
+    // ✅ Logout on back navigation and prevent forward access
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      const isProtected = path !== '/login';
+  
+      if (isProtected && localStorage.getItem('user')) {
+        // 🔐 User trying to go back from a protected route → logout
+        logout();
+  
+        // ⛔ Prevent forward from bringing user back
+        window.history.pushState({}, '', '/login');
+      }
+    };
+  
+    // ✅ Clear forward history on logout (call inside your `logout()` function too!)
+    const preventForwardLogin = () => {
+      window.history.pushState({}, '', '/login');
+      window.history.forward = () => {};
+    };
+  
+      // Add listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('unload', handleUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      // Cleanup listeners
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('unload', handleUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+  
+  
+  
+
+  /* const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
     
     try {
@@ -180,13 +258,108 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
+  }; */
+
+  const login = async (email: string, password: string): Promise<void> => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+  
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Login failed');
+  
+      // ✅ Send OTP here
+      const otpResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+  
+      const otpData = await otpResponse.json();
+      if (!otpResponse.ok) throw new Error(otpData.message || 'OTP sending failed');
+  
+      setTempUser({ email });
+      setOtpSent(true);
+      toast.success('OTP sent to your email');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Login failed';
+      toast.error(msg);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
+  
+  const verifyOtp = async (otp: string): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: tempUser?.email, otp }),
+      });
+  
+      const data = await response.json();
+      console.log('OTP response data:', data);
+  
+      if (!response.ok) throw new Error(data.message || 'Invalid OTP');
+  
+      // TEMP PATCH: Create a fake user using tempUser if backend doesn’t return it
+      const authenticatedUser = {
+        ...tempUser,
+        name: 'User', // fallback values
+        role: 'faculty',
+        employeeType: 'regular',
+        employeeCategory: 'teaching',
+        ...data.user, // override with backend data if present
+      };
+  
+      setUser(authenticatedUser);
+      localStorage.setItem('user', JSON.stringify(authenticatedUser));
+      setOtpSent(false);
+      setTempUser(null);
+      toast.success(data.message || 'OTP verified successfully');
+  
+      const role = authenticatedUser.role;
+      if (role === 'admin') navigate('/admin');
+      else if (role === 'hod' || role === 'dean') navigate('/approvals');
+      else navigate('/dashboard');
+  
+      return true;
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'OTP verification failed';
+      toast.error(errMsg);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const resetPassword = async (email: string, newPassword: string) => {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, newPassword }),
+    });
+  
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Reset failed');
+  };
+  
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
     toast.success('Logged out successfully');
+
+    // 🔁 Navigate to login and clear history so forward won't return to previous page
+    navigate('/login', { replace: true });
   };
+  
   
 
   return (

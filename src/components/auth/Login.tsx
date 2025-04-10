@@ -22,7 +22,7 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleOtpVerification = async (e: React.FormEvent) => {
+  /* const handleOtpVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
@@ -33,7 +33,21 @@ const Login: React.FC = () => {
     } catch (error) {
       console.error('OTP verification failed:', error);
     }
+  }; */
+
+  const handleOtpVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    try {
+      const success = await verifyOtp(otp);
+      if (success) {
+        navigate('/dashboard');
+      }      
+    } catch (error) {
+      console.error('OTP verification failed:', error);
+    }
   };
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 flex items-center justify-center p-4">
@@ -95,7 +109,17 @@ const Login: React.FC = () => {
                 {isLoading ? 'Signing in...' : 'Sign In'}
                 {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
               </button>
-              
+
+              <div className="text-right text-sm mt-2">
+                <button
+                  type="button"
+                  onClick={() => navigate('/reset-password')}
+                  className="text-blue-600 hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
+
               {/* <div className="mt-4 text-center text-sm text-gray-600">
                 <p className="mt-1">
                   <span className="font-semibold">Faculty:</span> faculty@nitandhra.ac.in
@@ -158,6 +182,20 @@ const Login: React.FC = () => {
               </button>
             </form>
           )}
+
+          {!showOtpInput && (
+            <div className="mt-4 text-center text-sm text-gray-600">
+              <span>Don't have an account? </span>
+              <button
+                type="button"
+                onClick={() => navigate('/register')}
+                className="text-blue-600 hover:underline ml-1"
+              >
+                Register
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
     </div>
