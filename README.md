@@ -54,7 +54,6 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
      - Dean FA
      - Registrar
      - Deputy Director
-     - Additional Deans, if applicable
 
 5. **Real-Time Notifications**  
    - Automated alerts for each approval stage.
