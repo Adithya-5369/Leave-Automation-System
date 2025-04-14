@@ -124,5 +124,15 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 
 ## 🛡 License
 
+This project is **not licensed for open-source use**.  
+All rights reserved © 2025 Adithya Sai Srinivas.  
+Please do **not copy, modify, reuse, or deploy** this project without explicit written permission.
+
+📧 Contact for usage inquiries: muttaadithyasaisrinivas@gmail.com
+
+---
+
+## 🛡 License
+
 This project is licensed under the [MIT License](LICENSE).  
 You're free to use, modify, and distribute this software with attribution. See the `LICENSE` file for more details.
