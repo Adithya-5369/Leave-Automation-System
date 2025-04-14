@@ -119,3 +119,10 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 
 📧 muttaadithyasaisrinivas@gmail.com  
 🌐 [Portfolio](https://adithya369.onrender.com) • [LinkedIn](https://linkedin.com/in/adithyasaisrinivas)
+
+---
+
+## 🛡 License
+
+This project is licensed under the [MIT License](LICENSE).  
+You're free to use, modify, and distribute this software with attribution. See the `LICENSE` file for more details.
