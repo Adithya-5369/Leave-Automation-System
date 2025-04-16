@@ -21,7 +21,7 @@ import { AuthProvider } from './context/AuthContext';
 function App() {
   return (
     <AuthProvider>
-      <Toaster position="top-right" />
+      <Toaster position="top-right" toastOptions={{duration: 5000,}}/>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

@@ -1,3 +1,4 @@
+import axios from 'axios';
 const API_BASE_URL = 'http://localhost:5000/api';
 
 export const registerUser = async (userData: {
@@ -42,4 +43,20 @@ export const verifyOtp = async (email: string, otp: string) => {
     body: JSON.stringify({ email, otp }),
   });
   return res.json();
+};
+
+interface LeaveData {
+  startDate: string;
+  endDate: string;
+  reason: string;
+  userId: string;
+}
+
+export const submitLeave = async (leaveData: LeaveData) => {
+  return axios.post('/auth/leaves', leaveData);
+};
+
+export const fetchUserLeaves = async (userId: string) => {
+  const res = await axios.get(`/auth/leaves/${userId}`);
+  return res.data;
 };
