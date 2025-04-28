@@ -26,7 +26,7 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 ---
 
 ## 📽 Demo Video
-
+[![Watch the video](https://via.placeholder.com/720x405.png?text=Click+to+Watch+Video)](https://drive.google.com/file/d/1sUHPMH0MV2m1tcdLsuXZVRn2tWskp_k1/view?usp=sharing)
 <iframe src="https://drive.google.com/file/d/1sUHPMH0MV2m1tcdLsuXZVRn2tWskp_k1/preview" width="720" height="405" allow="autoplay"></iframe>
 
 If the video doesn't load, [▶️ Watch it here](https://drive.google.com/file/d/1sUHPMH0MV2m1tcdLsuXZVRn2tWskp_k1/view?usp=sharing).
