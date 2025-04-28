@@ -25,6 +25,12 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 
 ---
 
+## 📽 Demo Video
+
+[▶️ Watch Demo Video](assets/demo-video.mp4)
+
+---
+
 ## 🛠 Tech Stack
 
 | Layer         | Technology                    |
