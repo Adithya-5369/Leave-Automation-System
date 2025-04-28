@@ -26,6 +26,9 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 ---
 
 ## 📽 Demo Video
+<video src="assets/Demo.mp4" controls width="720">
+    Your browser does not support the video tag.
+</video>
 
 [▶️ Watch Demo Video](assets/Demo.mp4)
 
