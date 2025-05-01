@@ -21,17 +21,61 @@ const role = user?.role;
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
   const selectedPolicy = LEAVE_POLICIES.find(policy => policy.leaveType === leaveType);
+
+  const getApprovalChain = (leaveType: string, role: string): string[] => {
+    const leaveTypesNeedingDirector = ['SPCL', 'CCL', 'OD', 'ML', 'PL'];
+    const normalizedLeaveType = leaveType.toUpperCase();
+    const chain: string[] = [];
   
-  const getApprovalChain = (leaveType: LeaveType, role: string): string[] => {
-    const leavePolicy = LEAVE_POLICIES.find(p => p.leaveType === leaveType);
-    if (!leavePolicy) return [];
+    switch (role.toLowerCase()) {
+      case 'faculty':
+        chain.push('hod', 'dean');
+        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
+          chain.push('director');
+        }
+        break;
   
-    // Shorten 'dean fa' → 'deanfa'
-    return leavePolicy.approvalHierarchy.map(r => r.replace(/\s/g, ''));
+      case 'hod':
+        chain.push('dean');
+        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
+          chain.push('director');
+        }
+        break;
+  
+      case 'dean':
+        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
+          chain.push('director');
+        }
+        break;
+  
+      case 'registrar':
+        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
+          chain.push('director');
+        }
+        break;
+  
+      case 'nonteaching':
+        chain.push('hod', 'registrar');
+        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
+          chain.push('director');
+        }
+        break;
+  
+      case 'adhoc':
+        chain.push('hod');
+        break;
+  
+      default:
+        break;
+    }
+  
+    return chain;
   };
   
 
-  /* const handleSubmit = async (e: React.FormEvent) => {
+  
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!startDate || !endDate || !reason) {
@@ -61,9 +105,9 @@ const role = user?.role;
     } finally {
       setIsSubmitting(false);
     }
-  }; */
+  };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+ /* const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
   
     if (!startDate || !endDate || !reason) {
@@ -119,7 +163,7 @@ const role = user?.role;
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }; */
   
   
 
@@ -343,42 +387,19 @@ const role = user?.role;
             <div className="p-4 bg-gray-50 rounded-md">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Approval Flow</h3>
               <div className="flex items-center">
-                {/* <div className="flex-1 text-center">
-                  <div className="h-8 w-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mx-auto">
-                    1
-                  </div>
-                  <p className="text-xs mt-1">You</p>
-                </div>
-                <div className="w-full max-w-[50px] h-0.5 bg-gray-300"></div> */}
-                <div className="flex-1 text-center">
-                  <div className="h-8 w-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center mx-auto">
-                    1
-                  </div>
-                  <p className="text-xs mt-1">HOD</p>
-                </div>
-                {(role !== 'adhoc') && (
-                  <>
-                    <div className="w-full max-w-[50px] h-0.5 bg-gray-300"></div>
+                {getApprovalChain(leaveType, role || '').map((approver, index, arr) => (
+                  <React.Fragment key={approver}>
                     <div className="flex-1 text-center">
                       <div className="h-8 w-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center mx-auto">
-                        2
+                        {index + 1}
                       </div>
-                      <p className="text-xs mt-1">Dean FA</p>
+                      <p className="text-xs mt-1 capitalize">{approver}</p>
                     </div>
-                  </>
-                 )}
-                {(leaveType === 'SPCL' || leaveType === 'ML' || leaveType === 'PL' || 
-                  leaveType === 'CCL' || leaveType === 'OD' || role === 'dean') && (
-                  <>
-                    <div className="w-full max-w-[50px] h-0.5 bg-gray-300"></div>
-                    <div className="flex-1 text-center">
-                      <div className="h-8 w-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center mx-auto">
-                        3
-                      </div>
-                      <p className="text-xs mt-1">Director</p>
-                    </div>
-                  </>
-                )}
+                    {index < arr.length - 1 && (
+                      <div className="w-full max-w-[50px] h-0.5 bg-gray-300"></div>
+                    )}
+                  </React.Fragment>
+                ))}
               </div>
             </div>
             

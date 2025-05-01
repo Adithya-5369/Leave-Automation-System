@@ -33,7 +33,8 @@ const authRoutes = require('./routes/authRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 
 app.use('/auth', detectSqlInjection, authRoutes);
-app.use('/auth/leave', detectSqlInjection, leaveRoutes);
+app.use('/api/auth/leave', detectSqlInjection, leaveRoutes);
+app.use('/uploads', express.static('uploads'));
 
 pool.connect()
   .then(() => console.log('✅ Connected to PostgreSQL'))

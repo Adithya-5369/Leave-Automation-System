@@ -32,7 +32,7 @@ export interface ApprovalStep {
   user?: User;
 }
 
-export interface LeaveApplication {
+/*export interface LeaveApplication {
   id: string;
   applicantId: string;
   applicantName: string;
@@ -50,7 +50,60 @@ export interface LeaveApplication {
   currentApprover: UserRole;
   alternateArrangements?: string;
   contactDuringLeave?: string;
+}*/
+
+// Final frontend format (for displaying in dashboard)
+export interface LeaveApplication {
+  id: string;
+  applicantId: string;
+  applicantName: string;
+  applicantDepartment: string;
+  leaveType: LeaveType; // notice this is not string, but enum type
+  startDate: Date;
+  endDate: Date;
+  reason: string;
+  isUrgent: boolean;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  approvalChain: {
+    role: string;
+    status: string;
+    comment?: string;
+    timestamp?: Date;
+  }[];
+  currentApprover: string;
+  alternateArrangements?: string;
+  contactDuringLeave?: string;
+  documents?: string[];
 }
+
+// Raw format from backend API
+export interface LeaveApplicationRaw {
+  id: string;
+  applicant_id: string;
+  applicant_name: string;
+  applicant_department: string;
+  leave_type: string;
+  start_date: string;
+  end_date: string;
+  reason: string;
+  is_urgent: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  approval_chain: {
+    role: string;
+    status: string;
+    comment?: string;
+    timestamp?: string;
+  }[];
+  current_approver: string;
+  alternate_arrangements?: string;
+  contact_during_leave?: string;
+  documents?: string[];
+}
+
 
 export interface LeavePolicy {
   leaveType: LeaveType;

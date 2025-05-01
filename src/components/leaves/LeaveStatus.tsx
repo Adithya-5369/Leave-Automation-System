@@ -12,8 +12,9 @@ import {
   FileSearch
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { LeaveApplication, LEAVE_TYPES } from '../../types/leave';
+import { LeaveApplication, LeaveApplicationRaw, LEAVE_TYPES, LeaveType } from '../../types/leave';
 import { format, differenceInDays } from 'date-fns';
+import { fetchUserLeaves } from '../../api';
 
 // Mock data
 const mockLeaveApplications: LeaveApplication[] = [
@@ -163,13 +164,61 @@ const mockLeaveApplications: LeaveApplication[] = [
   }
 ];
 
-const LeaveStatus: React.FC = () => {
+  const LeaveStatus: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [leaveApplications, setLeaveApplications] = useState<LeaveApplication[]>([]);
   const [expandedLeave, setExpandedLeave] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
+  
+  /* useEffect(() => {
+    const fetchLeaves = async () => {
+      try {
+        if (!user?.id) {
+          console.error('No user ID available');
+          return;
+        }
+        console.log('Fetching leaves for user:', user.id);
+        const data = await fetchUserLeaves(user.id);
+        console.log('Fetched Leaves Data:', data);
+  
+        const parsed: LeaveApplication[] = data.map((leave: LeaveApplicationRaw) => ({
+          id: leave.id.toString(),
+          applicantId: leave.applicant_id.toString(),
+          applicantName: leave.applicant_name ?? 'Unknown',
+          applicantDepartment: leave.applicant_department ?? 'Unknown',
+          leaveType: leave.leave_type as LeaveType,
+          startDate: new Date(leave.start_date),
+          endDate: new Date(leave.end_date),
+          reason: leave.reason,
+          isUrgent: leave.is_urgent,
+          status: leave.status,
+          createdAt: new Date(leave.created_at),
+          updatedAt: new Date(leave.updated_at),
+          approvalChain: Array.isArray(leave.approval_chain)
+            ? leave.approval_chain.map(step => ({
+                ...step,
+                timestamp: step.timestamp ? new Date(step.timestamp) : undefined,
+              }))
+            : JSON.parse(leave.approval_chain).map((step: { role: string; status: string; timestamp?: string; comment?: string }) => ({
+                ...step,
+                timestamp: step.timestamp ? new Date(step.timestamp) : undefined,
+              })),
+          currentApprover: leave.current_approver,
+          alternateArrangements: leave.alternate_arrangements,
+          contactDuringLeave: leave.contact_during_leave
+          // documents: leave.documents ?? [],
+        }));
+        
+        setLeaveApplications(mockLeaveApplications);
+      } catch (error) {
+        console.error('Error fetching leaves:', error);
+      }
+    };
+  
+    fetchLeaves();
+  }, [user]);   */
   
   useEffect(() => {
     // Simulate API call
@@ -432,6 +481,28 @@ const LeaveStatus: React.FC = () => {
                       <p className="text-sm text-gray-500">No comments provided</p>
                     )}
                   </div>
+
+                  {/* Documents Section */}
+                    <div className="mt-4">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Uploaded Documents</h4>
+                      {leave.documents && leave.documents.length > 0 && (
+                      <ul className="space-y-1 text-sm">
+                        {leave.documents.map((file, index) => (
+                          <li key={index}>
+                            <a
+                              href={`http://localhost:5000/uploads/${file}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 underline hover:text-blue-800"
+                            >
+                              {file}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                      )}
+                    </div>
+
                 </div>
               )}
             </div>
