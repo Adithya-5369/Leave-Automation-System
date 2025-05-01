@@ -221,9 +221,31 @@ const mockLeaveApplications: LeaveApplication[] = [
   }, [user]);   */
   
   useEffect(() => {
-    // Simulate API call
-    setLeaveApplications(mockLeaveApplications);
-  }, []);
+    // Get leaves from localStorage
+    const storedLeaves = localStorage.getItem('userLeaves');
+    const userLeaves = storedLeaves ? JSON.parse(storedLeaves) : [];
+
+    // Filter user's own leaves from mock data
+    const userMockLeaves = mockLeaveApplications.filter(
+      leave => leave.applicantId === user?.id
+    );
+
+    // Combine user's leaves from both sources
+    const userOwnLeaves = [...userMockLeaves, ...userLeaves];
+
+    // Sort user's own leaves by creation date (newest first)
+    userOwnLeaves.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    // Get other leaves (non-user leaves) from mock data
+    const otherLeaves = mockLeaveApplications.filter(
+      leave => leave.applicantId !== user?.id
+    );
+
+    // Combine all leaves with user's own leaves first
+    const allLeaves = [...userOwnLeaves, ...otherLeaves];
+
+    setLeaveApplications(allLeaves);
+  }, [user]);
   
   const toggleExpand = (id: string) => {
     if (expandedLeave === id) {

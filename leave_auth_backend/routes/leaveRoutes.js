@@ -3,7 +3,8 @@ const multer = require('multer');
 const router = express.Router();
 const {
   submitLeaveApplication,
-  getUserLeaves
+  getUserLeaves,
+  updateLeaveBalance
 } = require('../controllers/leaveController');
 
 // Optional: debug log to confirm the function is imported correctly
@@ -30,5 +31,6 @@ const upload = multer({ storage });
 router.post('/apply', upload.array('documents', 5), submitLeaveApplication);
 // router.post('/', applyLeave);        // POST /api/leaves
 router.get('/:userId', getUserLeaves); // GET /api/leaves/:userId
+router.post('/update-balance', updateLeaveBalance);
 
 module.exports = router;

@@ -197,12 +197,25 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     // Simulate API calls
     setLeaveBalances(mockLeaveBalances);
-    setRecentLeaves(mockRecentLeaves);
     
     if (isApprover(user?.role)) // user && ['hod', 'dean', 'director', 'registrar'].includes(user.role)
     {
       setPendingApprovals(mockPendingApprovals);
     }
+
+    // Get leaves from localStorage
+    const storedLeaves = localStorage.getItem('userLeaves');
+    const userLeaves = storedLeaves ? JSON.parse(storedLeaves) : [];
+
+    // Combine mock data and localStorage data
+    const allLeaves = [...mockRecentLeaves, ...userLeaves];
+
+    // Sort by creation date (newest first) and take the 5 most recent
+    const recentLeaves = allLeaves
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+
+    setRecentLeaves(recentLeaves);
   }, [user]);
 
   const getStatusBadgeClass = (status: string) => {
@@ -222,6 +235,67 @@ const Dashboard: React.FC = () => {
     const days = differenceInDays(end, start) + 1;
     return `${days} day${days > 1 ? 's' : ''}`;
   };
+
+  // Get leave balances from localStorage
+  const storedBalances = localStorage.getItem('leaveBalances');
+  const userBalances = storedBalances ? JSON.parse(storedBalances) : {};
+
+  // Define allowed days for each leave type
+  const allowedDays = {
+    CL: 8,    // Casual Leave: 8 days per year
+    EL: 30,   // Earned Leave: 30 days per year
+    SPCL: 15, // Special CL: 15 days per year
+    OD: 15,   // On Duty: 15 days per year
+    RH: 2,    // Restricted Holiday: 2 days per year
+    AHL: 30   // Adhoc Leave: 30 days per year
+  };
+
+  // Calculate used days from mock data
+  const mockUsedDays = mockLeaveBalances.reduce((acc, balance) => {
+    acc[balance.leaveType] = balance.used;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Calculate used days from applied leaves
+  const appliedUsedDays = recentLeaves.reduce((acc, leave) => {
+    if (leave.applicantId === user?.id && leave.status === 'approved') {
+      const days = differenceInDays(leave.endDate, leave.startDate) + 1;
+      acc[leave.leaveType] = (acc[leave.leaveType] || 0) + days;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Combine mock and user balances with used days
+  const allBalances = Object.entries(LEAVE_TYPES).reduce((acc, [type]) => {
+    const totalDays = allowedDays[type as keyof typeof allowedDays];
+    const mockUsed = mockUsedDays[type] || 0;
+    const appliedUsed = appliedUsedDays[type] || 0;
+    const totalUsed = mockUsed + appliedUsed;
+    
+    acc[type] = {
+      total: totalDays,
+      used: totalUsed,
+      remaining: totalDays - totalUsed
+    };
+    return acc;
+  }, {} as Record<string, { total: number; used: number; remaining: number }>);
+
+  // Filter and sort leave types based on user role and usage
+  const filteredLeaveTypes = Object.entries(LEAVE_TYPES)
+    .filter(([type]) => {
+      if (user?.role === 'adhoc') {
+        return type === 'AHL'; // Show only AHL for adhoc users
+      } else {
+        return type !== 'AHL'; // Exclude AHL for non-adhoc users
+      }
+    })
+    .sort(([typeA], [typeB]) => {
+      const balanceA = allBalances[typeA];
+      const balanceB = allBalances[typeB];
+      const usedPercentageA = isNaN(balanceA.used / balanceA.total) ? 0 : (balanceA.used / balanceA.total) * 100;
+      const usedPercentageB = isNaN(balanceB.used / balanceB.total) ? 0 : (balanceB.used / balanceB.total) * 100;
+      return usedPercentageB - usedPercentageA; // Sort by most used first
+    });
 
   return (
     <div className="space-y-6">
@@ -286,42 +360,54 @@ const Dashboard: React.FC = () => {
         )}
       </div>
       
-      {/* Leave balances */}
+      {/* Leave Balances */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-800">Leave Balances</h2>
+          <h2 className="text-xl font-semibold">Leave Balances</h2>
           <div className="text-sm text-gray-500">Academic Year 2025-26</div>
         </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {leaveBalances
-            .filter((leave) => {
-              if (isAdhoc(user?.role)) { //user?.role === 'adhoc'
-                return leave.leaveType === 'AHL'; // Show only AHL for adhoc users
-              } else {
-                return leave.leaveType !== 'AHL'; // Show all except AHL for non adhoc users
-              }
-            })
-            .map((leave) => (
-            <div key={leave.leaveType} className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-500">{LEAVE_TYPES[leave.leaveType]}</span>
-                <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
-                  {leave.leaveType}
-                </span>
-              </div>
-              <div className="text-2xl font-bold text-gray-800">{leave.remaining}</div>
-              <div className="text-xs text-gray-500 mt-1">
-                Used: {leave.used} / {leave.total}
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                <div 
-                  className="bg-orange-500 h-1.5 rounded-full" 
-                  style={{ width: `${(leave.used / leave.total) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <div className="flex space-x-4 pb-4" style={{ minWidth: 'max-content' }}>
+            {filteredLeaveTypes.map(([type, label]) => {
+              const balance = allBalances[type];
+              const usedPercentage = isNaN(balance.used / balance.total) ? 0 : (balance.used / balance.total) * 100;
+
+              return (
+                <div key={type} className="flex-shrink-0 w-56">
+                  <div className="bg-white rounded-lg shadow p-4 h-full">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-600">{label}</span>
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                        {type}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline mb-2">
+                      <span className="text-2xl font-bold text-gray-900">
+                        {balance.remaining}
+                      </span>
+                      <span className="ml-2 text-sm text-gray-500">
+                        / {balance.total} days
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Used: {balance.used} days</span>
+                        <span>{isNaN(balance.used / balance.total) ? '0' : ((balance.used / balance.total) * 100).toFixed(0)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-1">
+                        <div
+                          className="bg-orange-500 h-1 rounded-full"
+                          style={{
+                            width: `${usedPercentage}%`
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
       

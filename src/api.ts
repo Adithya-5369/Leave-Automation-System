@@ -88,6 +88,47 @@ export const fetchUserLeaves = async (userId: string) => {
   return res.json();
 };
 
+export const updateLeaveBalance = async (userId: string, leaveType: string, days: number) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/leaves/update-balance`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, leaveType, days }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update leave balance');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating leave balance:', error);
+    throw error;
+  }
+};
+
+export const getLeaveBalances = async (userId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/leaves/balances/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch leave balances');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching leave balances:', error);
+    throw error;
+  }
+};
+
 
 /* interface LeaveData {
   userId: string;

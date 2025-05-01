@@ -214,3 +214,13 @@ export const LEAVE_POLICIES: LeavePolicy[] = [
   }
 ];
 
+export interface Notification {
+  id: string;
+  type: 'approval' | 'status' | 'system';
+  title?: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  link?: string;
+}
+

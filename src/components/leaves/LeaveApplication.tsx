@@ -75,33 +75,74 @@ const role = user?.role;
 
   
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+  
     if (!startDate || !endDate || !reason) {
       toast.error('Please fill all required fields');
       return;
     }
-    
+  
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
+  
     if (end < start) {
       toast.error('End date cannot be before start date');
       return;
     }
-    
+  
     setIsSubmitting(true);
-    
+  
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const approvalChain = getApprovalChain(leaveType, user?.role || '');
       
-      toast.success('Leave application submitted successfully');
+      // Create new leave application
+      const newLeave = {
+        id: Date.now().toString(), // Generate unique ID
+        applicantId: user?.id || '',
+        applicantName: user?.name || '',
+        applicantDepartment: user?.department || '',
+        leaveType,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        reason,
+        isUrgent,
+        status: 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        approvalChain: approvalChain.map(role => ({
+          role,
+          status: role === approvalChain[0] ? 'pending' : 'not_started'
+        })),
+        currentApprover: approvalChain[0],
+        alternateArrangements,
+        contactDuringLeave,
+        documents: documents.map(file => URL.createObjectURL(file))
+      };
+
+      // Get existing leaves from localStorage
+      const storedLeaves = localStorage.getItem('userLeaves');
+      const userLeaves = storedLeaves ? JSON.parse(storedLeaves) : [];
+
+      // Add new leave to the array
+      userLeaves.push(newLeave);
+
+      // Save back to localStorage
+      localStorage.setItem('userLeaves', JSON.stringify(userLeaves));
+
+      // Also store in a separate key for approvers
+      if (approvalChain.length > 0) {
+        const storedApprovals = localStorage.getItem('pendingApprovals');
+        const pendingApprovals = storedApprovals ? JSON.parse(storedApprovals) : [];
+        pendingApprovals.push(newLeave);
+        localStorage.setItem('pendingApprovals', JSON.stringify(pendingApprovals));
+      }
+
+      toast.success('Leave application submitted successfully!');
       navigate('/leave-status');
     } catch (error) {
-      toast.error('Failed to submit leave application');
-      console.error(error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit leave application';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

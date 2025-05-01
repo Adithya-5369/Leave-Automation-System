@@ -196,8 +196,47 @@ const submitLeaveApplication = async (req, res) => {
     }
   };    
 
+const updateLeaveBalance = async (req, res) => {
+  const { userId, leaveType, days } = req.body;
+
+  try {
+    // First check if the user has a leave balance record
+    const checkResult = await pool.query(
+      `SELECT * FROM leave_balances 
+       WHERE user_id = $1 AND leave_type = $2`,
+      [userId, leaveType]
+    );
+
+    if (checkResult.rows.length === 0) {
+      // If no record exists, create one with default values
+      await pool.query(
+        `INSERT INTO leave_balances (user_id, leave_type, total, used, remaining)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [userId, leaveType, 30, days, 30 - days] // Default total of 30 days
+      );
+    } else {
+      // Update existing record
+      const currentBalance = checkResult.rows[0];
+      const newUsed = currentBalance.used + days;
+      const newRemaining = currentBalance.total - newUsed;
+
+      await pool.query(
+        `UPDATE leave_balances 
+         SET used = $1, remaining = $2
+         WHERE user_id = $3 AND leave_type = $4`,
+        [newUsed, newRemaining, userId, leaveType]
+      );
+    }
+
+    res.status(200).json({ message: 'Leave balance updated successfully' });
+  } catch (err) {
+    console.error('Error updating leave balance:', err);
+    res.status(500).json({ message: 'Failed to update leave balance' });
+  }
+};
 
 module.exports = {
   submitLeaveApplication,
-  getUserLeaves
+  getUserLeaves,
+  updateLeaveBalance
 };
