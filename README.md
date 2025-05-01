@@ -3,7 +3,7 @@
 
 A secure, full-stack web platform designed to automate the multi-level leave request and approval process for faculty and staff at NIT Andhra Pradesh. This system addresses inefficiencies in manual workflows with digital dashboards, OTP login, structured approvals, and real-time analytics.
 
-Developed as part of an EPICS (Engineering Projects in Community Service) Project under the guidance of Dr. Karthick Seshadri, Assistant Professor.
+Developed as part of an EPICS (Engineering Projects in Community Service) Project under the guidance of [Dr. Karthick Seshadri, Assistant Professor, NIT Andhra Pradesh](https://nitandhra.ac.in/dept/cse/20075).
 
 ---
 
@@ -39,7 +39,7 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 | Backend       | Node.js, Express.js           |
 | Database      | PostgreSQL (BCNF normalized)  |
 | Authentication| Nodemailer (Email OTP)        |
-| Hosting       | Render (planned)              |
+| Hosting       | Fly.io / Render (planned)              |
 
 ---
 
