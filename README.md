@@ -39,7 +39,7 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 | Backend       | Node.js, Express.js           |
 | Database      | PostgreSQL (BCNF normalized)  |
 | Authentication| Nodemailer (Email OTP)        |
-| Hosting       | Render (planned)              |
+| Hosting       | Fly.io / Render (planned)              |
 
 ---
 
