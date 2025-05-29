@@ -6,14 +6,14 @@ import {
   FileText, 
   CheckCircle, 
   XCircle, 
-  AlertCircle,
-  BarChart3
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { LeaveBalance, LeaveApplication, LEAVE_TYPES } from '../../types/leave';
+import { LeaveBalance, LeaveApplication, LeaveApplicationRaw, LEAVE_TYPES, LeaveType, ApprovalStep } from '../../types/leave';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, differenceInDays } from 'date-fns';
-import { isApprover, isAdhoc} from '../../utils/roleHelpers';
+import { isApprover} from '../../utils/roleHelpers';
+import { fetchUserLeaves } from '../../api';
 
 // Mock data
 const mockLeaveBalances: LeaveBalance[] = [
@@ -195,28 +195,74 @@ const Dashboard: React.FC = () => {
   const [pendingApprovals, setPendingApprovals] = useState<LeaveApplication[]>([]);
 
   useEffect(() => {
-    // Simulate API calls
-    setLeaveBalances(mockLeaveBalances);
-    
-    if (isApprover(user?.role)) // user && ['hod', 'dean', 'director', 'registrar'].includes(user.role)
-    {
-      setPendingApprovals(mockPendingApprovals);
-    }
-
-    // Get leaves from localStorage
-    const storedLeaves = localStorage.getItem('userLeaves');
-    const userLeaves = storedLeaves ? JSON.parse(storedLeaves) : [];
-
-    // Combine mock data and localStorage data
-    const allLeaves = [...mockRecentLeaves, ...userLeaves];
-
-    // Sort by creation date (newest first) and take the 5 most recent
-    const recentLeaves = allLeaves
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5);
-
-    setRecentLeaves(recentLeaves);
-  }, [user]);
+    const loadDashboardData = async () => {
+      try {
+        // Set mock leave balances as usual
+        setLeaveBalances(leaveBalances);
+  
+        // Optional: set pending approvals if the user is an approver
+        if (isApprover(user?.role)) {
+          setPendingApprovals(pendingApprovals); // Replace later with real data
+        }
+  
+        // Only continue if user ID exists
+        if (!user?.id) return;
+  
+        // Fetch leaves from the backend
+        const data = await fetchUserLeaves(user.id);
+        console.log('Fetched Leaves Data:', data);
+  
+        // Parse backend response into LeaveApplication[]
+        const parsedLeaves = data.map((leave: LeaveApplicationRaw) => ({
+          id: leave.id.toString(),
+          applicantId: leave.applicant_id.toString(),
+          applicantName: leave.applicant_name ?? 'Unknown',
+          applicantDepartment: leave.applicant_department ?? 'Unknown',
+          leaveType: leave.leave_type as LeaveType,
+          startDate: new Date(leave.start_date),
+          endDate: new Date(leave.end_date),
+          reason: leave.reason,
+          isUrgent: leave.is_urgent,
+          status: leave.status,
+          createdAt: new Date(leave.created_at),
+          updatedAt: new Date(leave.updated_at),
+          approvalChain: (() => {
+            try {
+              const chain = typeof leave.approval_chain === 'string'
+                ? JSON.parse(leave.approval_chain)
+                : leave.approval_chain;
+          
+              return Array.isArray(chain)
+                ? chain.map((step: ApprovalStep) => ({
+                    ...step,
+                    timestamp: step.timestamp ? new Date(step.timestamp) : undefined,
+                  }))
+                : [];
+            } catch (err) {
+              console.error('Failed to parse approvalChain:', err);
+              return [];
+            }
+          })(),
+          currentApprover: leave.current_approver,
+          alternateArrangements: leave.alternate_arrangements,
+          contactDuringLeave: leave.contact_during_leave,
+          documents: leave.documents ?? [],
+        }));
+  
+        // Sort and slice top 5 most recent applications
+        const recent = parsedLeaves
+          .sort((a: LeaveApplication, b: LeaveApplication) => b.createdAt.getTime() - a.createdAt.getTime())
+          .slice(0, 5);
+  
+        setRecentLeaves(recent);
+      } catch (error) {
+        console.error('Error fetching recent leaves:', error);
+      }
+    };
+  
+    loadDashboardData();
+  }, [user, leaveBalances, pendingApprovals]);
+  
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -237,7 +283,7 @@ const Dashboard: React.FC = () => {
   };
 
   // Get leave balances from localStorage
-  const storedBalances = localStorage.getItem('leaveBalances');
+  const storedBalances = sessionStorage.getItem('leaveBalances');
   const userBalances = storedBalances ? JSON.parse(storedBalances) : {};
 
   // Define allowed days for each leave type
@@ -251,7 +297,7 @@ const Dashboard: React.FC = () => {
   };
 
   // Calculate used days from mock data
-  const mockUsedDays = mockLeaveBalances.reduce((acc, balance) => {
+  const UsedDays = leaveBalances.reduce((acc, balance) => {
     acc[balance.leaveType] = balance.used;
     return acc;
   }, {} as Record<string, number>);
@@ -268,9 +314,9 @@ const Dashboard: React.FC = () => {
   // Combine mock and user balances with used days
   const allBalances = Object.entries(LEAVE_TYPES).reduce((acc, [type]) => {
     const totalDays = allowedDays[type as keyof typeof allowedDays];
-    const mockUsed = mockUsedDays[type] || 0;
+    const Used = UsedDays[type] || 0;
     const appliedUsed = appliedUsedDays[type] || 0;
-    const totalUsed = mockUsed + appliedUsed;
+    const totalUsed = Used + appliedUsed;
     
     acc[type] = {
       total: totalDays,
@@ -425,23 +471,9 @@ const Dashboard: React.FC = () => {
           </div>
           
           {recentLeaves
-            .filter((leave) => {
-              if (user?.role === 'adhoc') {
-                return leave.leaveType === 'AHL'; // Show only AHL for adhoc users
-              } else {
-                return leave.leaveType !== 'AHL'; // Show all except AHL for non-adhoc users
-              }
-            })
             .length > 0 ? (
               <div className="space-y-4">
                 {recentLeaves
-                  .filter((leave) => {
-                    if (user?.role === 'adhoc') {
-                      return leave.leaveType === 'AHL';
-                    } else {
-                      return leave.leaveType !== 'AHL';
-                    }
-                  })
                   .map((leave) => (
                     <div key={leave.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex justify-between items-start">

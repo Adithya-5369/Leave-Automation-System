@@ -3,23 +3,20 @@ import {
   CheckCircle, 
   XCircle, 
   AlertCircle,
-  Clock,
   Search,
-  Filter,
-  FileText,
-  Calendar,
   ChevronDown,
   ChevronUp,
   MessageSquare,
   X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { LeaveApplication, LEAVE_TYPES } from '../../types/leave';
-import { format, differenceInDays, isAfter, isBefore } from 'date-fns';
+import { LeaveApplication, LEAVE_TYPES, LeaveApplicationRaw} from '../../types/leave';
+import { format, differenceInDays, isBefore } from 'date-fns';
 import toast from 'react-hot-toast';
+import { fetchPendingApprovals, submitLeaveDecision } from '../../api';
 
 // Mock data
-const mockPendingApprovals: LeaveApplication[] = [
+/*const mockPendingApprovals: LeaveApplication[] = [
   {
     id: '1',
     applicantId: '6',
@@ -123,7 +120,7 @@ const mockPendingApprovals: LeaveApplication[] = [
     alternateArrangements: 'Classes will be handled by PhD scholars',
     contactDuringLeave: '+91 9876543210'
   }
-];
+];*/
 
 const ApprovalDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -138,16 +135,53 @@ const ApprovalDashboard: React.FC = () => {
   const [showBulkComment, setShowBulkComment] = useState<boolean>(false);
 
   useEffect(() => {
-    let filteredApprovals = [...mockPendingApprovals];
-    
-    if (user) {
-      filteredApprovals = filteredApprovals.filter(leave => 
-        leave.currentApprover === user.role
-      );
-    }
-    
-    setPendingApprovals(filteredApprovals);
-  }, [user]);
+    const fetchApprovals = async () => {
+      
+      try {
+
+      if (!user?.role) return;
+  
+        /*const response = await fetchPendingApprovals(user.role);
+        if (!response.ok) throw new Error('Failed to fetch approvals');*/
+  
+        const data = await fetchPendingApprovals(user?.role);
+        console.log("Pending approvals response:", data);
+        console.log("Raw JSON data:", JSON.stringify(data, null, 2));
+        const parsed = data
+        .map((leave: LeaveApplication) => {
+        
+          return {
+            id: leave.id,
+            applicantId: leave.applicantId,
+            leaveType: leave.leaveType,
+            startDate: new Date(leave.startDate),
+            endDate: new Date(leave.endDate),
+            reason: leave.reason,
+            isUrgent: leave.isUrgent,
+            alternateArrangements: leave.alternateArrangements,
+            contactDuringLeave: leave.contactDuringLeave,
+            documents: leave.documents ?? [],
+            status: leave.status,
+            createdAt: new Date(leave.createdAt),
+            updatedAt: new Date(leave.updatedAt),
+            approvalChain: (leave.approvalChain ?? []).map((step) => ({
+              ...step,
+              timestamp: step.timestamp ? new Date(step.timestamp) : undefined,
+            })),
+            currentApprover: leave.currentApprover
+          };
+      });
+       
+      setPendingApprovals(parsed);
+      console.log("Pending Approvals (before filter):", pendingApprovals);
+      } catch (error) {
+        console.error('Error loading approvals:', error);
+        toast.error('Failed to load pending approvals');
+      }
+    };
+  
+    fetchApprovals();
+  }, [user]);  
   
   const toggleExpand = (id: string) => {
     if (expandedLeave === id) {
@@ -178,7 +212,7 @@ const ApprovalDashboard: React.FC = () => {
     setShowBulkComment(false);
   };
 
-  const handleApprove = (id: string) => {
+  /*const handleApprove = (id: string) => {
     if (!commentText.trim()) {
       toast.error('Please add a comment before approving');
       return;
@@ -248,13 +282,126 @@ const ApprovalDashboard: React.FC = () => {
     setShowBulkComment(false);
     toast.success(`${selectedLeaves.length} leave application(s) rejected`);
     setCommentText('');
+  };*/
+
+  const handleApprove = async (id: string) => {
+    if (!commentText.trim()) {
+      toast.error('Please add a comment before approving');
+      return;
+    }
+  
+    try {
+      await submitLeaveDecision({
+        leaveId: id,
+        action: 'approve',
+        approverRole: user?.role ?? '',
+        comment: commentText.trim(),
+      });
+  
+      setPendingApprovals(prev => prev.filter(leave => leave.id !== id));
+      setSelectedLeaves(prev => prev.filter(leaveId => leaveId !== id));
+      setExpandedLeave(null);
+      setCommentText('');
+      toast.success('Leave application approved successfully');
+    } catch (err) {
+      toast.error((err instanceof Error ? err.message : 'Approval failed'));
+    }
   };
+  
+  const handleReject = async (id: string) => {
+    if (!commentText.trim()) {
+      toast.error('Please add a comment before rejecting');
+      return;
+    }
+  
+    try {
+      await submitLeaveDecision({
+        leaveId: id,
+        action: 'reject',
+        approverRole: user?.role ?? '',
+        comment: commentText.trim(),
+      });
+  
+      setPendingApprovals(prev => prev.filter(leave => leave.id !== id));
+      setSelectedLeaves(prev => prev.filter(leaveId => leaveId !== id));
+      setExpandedLeave(null);
+      setCommentText('');
+      toast.success('Leave application rejected');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Rejection failed');
+    }
+  };
+  
+  const handleBulkApprove = async () => {
+    if (selectedLeaves.length === 0) {
+      toast.error('Please select at least one application to approve');
+      return;
+    }
+    if (!commentText.trim()) {
+      toast.error('Please add a comment before approving');
+      return;
+    }
+  
+    try {
+      await Promise.all(
+        selectedLeaves.map(id =>
+          submitLeaveDecision({
+            leaveId: id,
+            action: 'approve',
+            approverRole: user?.role ?? '',
+            comment: commentText.trim(),
+          })
+        )
+      );
+  
+      setPendingApprovals(prev => prev.filter(leave => !selectedLeaves.includes(leave.id)));
+      setSelectedLeaves([]);
+      setShowBulkComment(false);
+      setCommentText('');
+      toast.success(`${selectedLeaves.length} application(s) approved`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Approval failed');
+    }
+  };
+  
+  const handleBulkReject = async () => {
+    if (selectedLeaves.length === 0) {
+      toast.error('Please select at least one application to reject');
+      return;
+    }
+    if (!commentText.trim()) {
+      toast.error('Please add a comment before rejecting');
+      return;
+    }
+  
+    try {
+      await Promise.all(
+        selectedLeaves.map(id =>
+          submitLeaveDecision({
+            leaveId: id,
+            action: 'reject',
+            approverRole: user?.role ?? '',
+            comment: commentText.trim(),
+          })
+        )
+      );
+  
+      setPendingApprovals(prev => prev.filter(leave => !selectedLeaves.includes(leave.id)));
+      setSelectedLeaves([]);
+      setShowBulkComment(false);
+      setCommentText('');
+      toast.success(`${selectedLeaves.length} application(s) rejected`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Rejection failed');
+    }
+  };
+  
   
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'approved':
+      case 'approve':
         return 'badge-approved';
-      case 'rejected':
+      case 'reject':
         return 'badge-rejected';
       case 'pending':
         return 'badge-pending';
@@ -283,14 +430,14 @@ const ApprovalDashboard: React.FC = () => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       return (
-        leave.applicantName.toLowerCase().includes(term) ||
-        leave.reason.toLowerCase().includes(term) ||
-        LEAVE_TYPES[leave.leaveType].toLowerCase().includes(term)
+        leave.applicantName?.toLowerCase().includes(term) ||
+        leave.reason?.toLowerCase().includes(term) ||
+        (LEAVE_TYPES[leave.leaveType]?.toLowerCase().includes(term))
       );
     }
-    return true;
+    return true; 
   });
-  
+  console.log("Filtered Approvals (after filter):", filteredApprovals);
   const sortedApprovals = [...filteredApprovals].sort((a, b) => {
     if (a.isUrgent && !b.isUrgent) return -1;
     if (!a.isUrgent && b.isUrgent) return 1;
@@ -300,7 +447,7 @@ const ApprovalDashboard: React.FC = () => {
   });
   
   const departments = Array.from(new Set(pendingApprovals.map(leave => leave.applicantDepartment)));
-  
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-6">
@@ -593,6 +740,27 @@ const ApprovalDashboard: React.FC = () => {
                       )}
                     </div>
                   )}
+                  {/* Documents */}
+                  {(leave.documents ?? []).length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="font-semibold text-gray-800">Attached Documents</h4>
+                      <ul className="list-disc ml-5 text-sm text-blue-600 mt-1">
+                        {(leave.documents ?? []).map((doc, index) => (
+                          <li key={index}>
+                            <a
+                              href={`http://localhost:5000/uploads/${doc}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:underline"
+                            >
+                              {doc}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   
                   {/* Previous approvals */}
                   {leave.approvalChain.some(step => step.status === 'approved') && (

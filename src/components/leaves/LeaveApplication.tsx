@@ -22,7 +22,7 @@ const role = user?.role;
   
   const selectedPolicy = LEAVE_POLICIES.find(policy => policy.leaveType === leaveType);
 
-  const getApprovalChain = (leaveType: string, role: string): string[] => {
+  /*const getApprovalChain = (leaveType: string, role: string): string[] => {
     const leaveTypesNeedingDirector = ['SPCL', 'CCL', 'OD', 'ML', 'PL'];
     const normalizedLeaveType = leaveType.toUpperCase();
     const chain: string[] = [];
@@ -70,12 +70,12 @@ const role = user?.role;
     }
   
     return chain;
-  };
+  };*/
   
 
   
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  /*const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
   
     if (!startDate || !endDate || !reason) {
@@ -121,21 +121,21 @@ const role = user?.role;
       };
 
       // Get existing leaves from localStorage
-      const storedLeaves = localStorage.getItem('userLeaves');
+      const storedLeaves = sessionStorage.getItem('userLeaves');
       const userLeaves = storedLeaves ? JSON.parse(storedLeaves) : [];
 
       // Add new leave to the array
       userLeaves.push(newLeave);
 
       // Save back to localStorage
-      localStorage.setItem('userLeaves', JSON.stringify(userLeaves));
+      sessionStorage.setItem('userLeaves', JSON.stringify(userLeaves));
 
       // Also store in a separate key for approvers
       if (approvalChain.length > 0) {
-        const storedApprovals = localStorage.getItem('pendingApprovals');
+        const storedApprovals = sessionStorage.getItem('pendingApprovals');
         const pendingApprovals = storedApprovals ? JSON.parse(storedApprovals) : [];
         pendingApprovals.push(newLeave);
-        localStorage.setItem('pendingApprovals', JSON.stringify(pendingApprovals));
+        sessionStorage.setItem('pendingApprovals', JSON.stringify(pendingApprovals));
       }
 
       toast.success('Leave application submitted successfully!');
@@ -146,9 +146,70 @@ const role = user?.role;
     } finally {
       setIsSubmitting(false);
     }
-  };
+  };*/
 
- /* const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  type ApprovalStep = {
+    role: string;
+    status: 'pending' | 'approved' | 'rejected';
+    timestamp: string | null;
+    comment: string;
+  };
+  
+  const getApprovalChain = (leaveType: string, role: string): ApprovalStep[] => {
+    const leaveTypesNeedingDirector = ['SPCL', 'CCL', 'OD', 'ML', 'PL'];
+    const normalizedLeaveType = leaveType.toUpperCase();
+    const roles: string[] = [];
+  
+    switch (role.toLowerCase()) {
+      case 'faculty':
+        roles.push('hod', 'dean');
+        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
+          roles.push('director');
+        }
+        break;
+  
+      case 'hod':
+        roles.push('dean');
+        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
+          roles.push('director');
+        }
+        break;
+  
+      case 'dean':
+      case 'registrar':
+        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
+          roles.push('director');
+        }
+        break;
+  
+      case 'nonteaching':
+        roles.push('hod', 'registrar');
+        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
+          roles.push('director');
+        }
+        break;
+  
+      case 'adhoc':
+        roles.push('hod');
+        break;
+  
+      default:
+        break;
+    }
+  
+    // Convert roles to detailed approval steps
+    const approvalChain: ApprovalStep[] = roles.map((r) => ({
+      role: r,
+      status: 'pending',
+      timestamp: null,
+      comment: '',
+    }));
+  
+    return approvalChain;
+  };
+  
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
   
     if (!startDate || !endDate || !reason) {
@@ -181,7 +242,7 @@ const role = user?.role;
       formDataToSend.append('applicantName', user?.name || '');
       formDataToSend.append('applicantDepartment', user?.department || '');
       formDataToSend.append('approvalChain', JSON.stringify(approvalChain));
-      formDataToSend.append('currentApprover', approvalChain[0]);
+      formDataToSend.append('currentApprover', approvalChain[0].role);
   
       documents.forEach((file) => {
         formDataToSend.append('documents', file);
@@ -204,7 +265,7 @@ const role = user?.role;
     } finally {
       setIsSubmitting(false);
     }
-  }; */
+  };
   
   
 
@@ -425,7 +486,7 @@ const role = user?.role;
             </div>
             
             {/* Approval Flow */}
-            <div className="p-4 bg-gray-50 rounded-md">
+            {/*<div className="p-4 bg-gray-50 rounded-md">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Approval Flow</h3>
               <div className="flex items-center">
                 {getApprovalChain(leaveType, role || '').map((approver, index, arr) => (
@@ -442,7 +503,27 @@ const role = user?.role;
                   </React.Fragment>
                 ))}
               </div>
+            </div>*/}
+
+            <div className="p-4 bg-gray-50 rounded-md">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Approval Flow</h3>
+              <div className="flex items-center">
+                {getApprovalChain(leaveType, role || '').map((approver, index, arr) => (
+                  <React.Fragment key={approver.role}>
+                    <div className="flex-1 text-center">
+                      <div className="h-8 w-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center mx-auto">
+                        {index + 1}
+                      </div>
+                      <p className="text-xs mt-1 capitalize">{approver.role}</p>
+                    </div>
+                    {index < arr.length - 1 && (
+                      <div className="w-full max-w-[50px] h-0.5 bg-gray-300"></div>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
             </div>
+
             
             {/* Submit Button */}
             <div className="flex justify-end space-x-4">

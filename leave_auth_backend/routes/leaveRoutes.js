@@ -4,7 +4,9 @@ const router = express.Router();
 const {
   submitLeaveApplication,
   getUserLeaves,
-  updateLeaveBalance
+  updateLeaveBalance,
+  getPendingApprovals,
+  handleLeaveDecision
 } = require('../controllers/leaveController');
 
 // Optional: debug log to confirm the function is imported correctly
@@ -29,8 +31,9 @@ const upload = multer({ storage });
 
 // In your route file
 router.post('/apply', upload.array('documents', 5), submitLeaveApplication);
-// router.post('/', applyLeave);        // POST /api/leaves
 router.get('/:userId', getUserLeaves); // GET /api/leaves/:userId
 router.post('/update-balance', updateLeaveBalance);
+router.get('/pending/:role', getPendingApprovals); // GET /api/auth/leaves/pending/:role
+router.post('/approve', handleLeaveDecision); // POST /api/auth/leaves/approve
 
 module.exports = router;

@@ -129,6 +129,44 @@ export const getLeaveBalances = async (userId: string) => {
   }
 };
 
+export const fetchPendingApprovals = async (userId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/leaves/pending/${userId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch pending approvals');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching pending approvals:', error);
+    throw error;
+  }
+};
+
+export const submitLeaveDecision = async ({
+  leaveId,
+  action,
+  approverRole,
+  comment,
+}: {
+  leaveId: string;
+  action: 'approve' | 'reject';
+  approverRole: string;
+  comment: string;
+}) => {
+  const res = await fetch(`${API_BASE_URL}/auth/leaves/approve`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ leaveId, action, approverRole, comment }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to submit decision');
+  }
+
+  return res.json();
+};
+
 
 /* interface LeaveData {
   userId: string;

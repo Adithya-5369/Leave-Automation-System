@@ -33,8 +33,9 @@ const authRoutes = require('./routes/authRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 
 app.use('/auth', detectSqlInjection, authRoutes);
-app.use('/api/auth/leave', detectSqlInjection, leaveRoutes);
+app.use('/auth/leave', detectSqlInjection, leaveRoutes);
 app.use('/uploads', express.static('uploads'));
+app.use('/api/auth/leaves', leaveRoutes);
 
 pool.connect()
   .then(() => console.log('✅ Connected to PostgreSQL'))
@@ -42,6 +43,28 @@ pool.connect()
 
 app.get('/', (req, res) => {
   res.send('Leave Automation Backend API is running 🚀');
+});
+
+app.get('/api/leaves/:id', async (req, res) => {
+  const { id } = req.params;
+  const result = await pool.query('SELECT * FROM leave_applications WHERE applicant_id = $1', [id]);
+  res.json(result.rows);
+});
+
+app.get('/api/auth/leaves/pending/:role', async (req, res) => {
+  const { role } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM leave_applications WHERE status = $1 AND current_approver = $2',
+      ['pending', role]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('❌ Error fetching pending leaves:', err);
+    res.status(500).json({ message: 'Failed to fetch pending leaves' });
+  }
 });
 
 const PORT = process.env.PORT || 5000;

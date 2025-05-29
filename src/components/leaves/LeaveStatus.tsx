@@ -172,7 +172,7 @@ const mockLeaveApplications: LeaveApplication[] = [
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
   
-  /* useEffect(() => {
+  useEffect(() => {
     const fetchLeaves = async () => {
       try {
         if (!user?.id) {
@@ -207,44 +207,18 @@ const mockLeaveApplications: LeaveApplication[] = [
               })),
           currentApprover: leave.current_approver,
           alternateArrangements: leave.alternate_arrangements,
-          contactDuringLeave: leave.contact_during_leave
-          // documents: leave.documents ?? [],
+          documents: leave.documents ?? [],
+          contactDuringLeave: leave.contact_during_leave,
         }));
-        
-        setLeaveApplications(mockLeaveApplications);
+        parsed.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setLeaveApplications(parsed);
+
       } catch (error) {
         console.error('Error fetching leaves:', error);
       }
     };
   
     fetchLeaves();
-  }, [user]);   */
-  
-  useEffect(() => {
-    // Get leaves from localStorage
-    const storedLeaves = localStorage.getItem('userLeaves');
-    const userLeaves = storedLeaves ? JSON.parse(storedLeaves) : [];
-
-    // Filter user's own leaves from mock data
-    const userMockLeaves = mockLeaveApplications.filter(
-      leave => leave.applicantId === user?.id
-    );
-
-    // Combine user's leaves from both sources
-    const userOwnLeaves = [...userMockLeaves, ...userLeaves];
-
-    // Sort user's own leaves by creation date (newest first)
-    userOwnLeaves.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    // Get other leaves (non-user leaves) from mock data
-    const otherLeaves = mockLeaveApplications.filter(
-      leave => leave.applicantId !== user?.id
-    );
-
-    // Combine all leaves with user's own leaves first
-    const allLeaves = [...userOwnLeaves, ...otherLeaves];
-
-    setLeaveApplications(allLeaves);
   }, [user]);
   
   const toggleExpand = (id: string) => {
@@ -273,7 +247,7 @@ const mockLeaveApplications: LeaveApplication[] = [
     return `${days} day${days > 1 ? 's' : ''}`;
   };
   
-  const filteredLeaves = leaveApplications.filter(leave => {
+  /*const filteredLeaves = leaveApplications.filter(leave => {
     // Role-based filtering
     if (user?.role === 'adhoc') {
       if (leave.leaveType !== 'AHL') return false; // Show only AHL for adhoc users
@@ -285,8 +259,23 @@ const mockLeaveApplications: LeaveApplication[] = [
     if (filterStatus !== 'all' && leave.status !== filterStatus) return false;
     if (filterType !== 'all' && leave.leaveType !== filterType) return false;
     return true;
+  });*/
+
+  const filteredLeaves = leaveApplications.filter(leave => {
+    // Apply status filter
+    if (filterStatus !== 'all' && leave.status !== filterStatus) return false;
+  
+    // Apply type filter
+    if (filterType !== 'all' && leave.leaveType !== filterType) return false;
+  
+    return true;
   });
   
+  
+  
+  
+  console.log("Parsed leaves after filter:", filteredLeaves);
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
@@ -439,44 +428,57 @@ const mockLeaveApplications: LeaveApplication[] = [
                   {/* Approval chain */}
                   <div className="mb-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Approval Status</h4>
-                    <div className="flex items-center">
-                      {leave.approvalChain.map((step, index) => (
-                        <React.Fragment key={index}>
-                          <div className="flex-1 text-center">
-                            <div className={`h-8 w-8 rounded-full flex items-center justify-center mx-auto
-                              ${step.status === 'approved' 
-                                ? 'bg-green-100 text-green-600' 
-                                : step.status === 'rejected'
-                                  ? 'bg-red-100 text-red-600'
-                                  : 'bg-yellow-100 text-yellow-600'
-                              }`}
-                            >
-                              {step.status === 'approved' && <CheckCircle className="h-5 w-5" />}
-                              {step.status === 'rejected' && <XCircle className="h-5 w-5" />}
-                              {step.status === 'pending' && <Clock className="h-5 w-5" />}
-                            </div>
-                            <p className="text-xs mt-1 capitalize">{step.role}</p>
-                            {step.timestamp && (
-                              <p className="text-xs text-gray-500">
-                                {format(step.timestamp, 'MMM dd')}
-                              </p>
-                            )}
-                          </div>
-                          {index < leave.approvalChain.length - 1 && (
-                            <div className={`w-full max-w-[50px] h-0.5 
-                              ${step.status === 'approved' 
-                                ? 'bg-green-500' 
-                                : step.status === 'rejected'
-                                  ? 'bg-red-500'
-                                  : 'bg-gray-300'
-                              }`}
-                            ></div>
-                          )}
-                        </React.Fragment>
-                      ))}
+                    <div className="flex items-center justify-center">
+                      {leave.approvalChain
+                        .map((step) => ({
+                          ...step,
+                          status: step.status?.toLowerCase().trim(),
+                        }))
+                        .map((step, index, arr) => {
+                          const isLast = index === arr.length - 1;
+                          const nextStep = arr[index + 1];
+
+                          return (
+                            <React.Fragment key={index}>
+                              {/* Step Circle */}
+                              <div className="flex flex-col items-center text-center">
+                                <div
+                                  className={`h-8 w-8 rounded-full flex items-center justify-center
+                                  ${step.status === 'approve'
+                                    ? 'bg-green-100 text-green-600'
+                                    : step.status === 'reject'
+                                    ? 'bg-red-100 text-red-600'
+                                    : 'bg-yellow-100 text-yellow-600'
+                                  }`}
+                                >
+                                  {step.status === 'approve' && <CheckCircle className="h-5 w-5" />}
+                                  {step.status === 'reject' && <XCircle className="h-5 w-5" />}
+                                  {step.status === 'pending' && <Clock className="h-5 w-5" />}
+                                </div>
+                                <p className="text-xs mt-1 capitalize">{step.role}</p>
+                                {step.timestamp && (
+                                  <p className="text-xs text-gray-500">{format(new Date(step.timestamp), 'MMM dd')}</p>
+                                )}
+                              </div>
+
+                              {/* Connector to next */}
+                              {!isLast && (
+                                <div
+                                  className={`w-10 h-0.5 mx-2 
+                                  ${step.status === 'approve' && nextStep?.status !== 'reject'
+                                    ? 'bg-green-500'
+                                    : step.status === 'reject'
+                                    ? 'bg-red-500'
+                                    : 'bg-gray-300'
+                                  }`}
+                                />
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
                     </div>
                   </div>
-                  
+                 
                   {/* Comments */}
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Comments</h4>
