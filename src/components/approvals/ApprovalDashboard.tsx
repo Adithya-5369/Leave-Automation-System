@@ -10,7 +10,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { LeaveApplication, LEAVE_TYPES, LeaveApplicationRaw} from '../../types/leave';
+import { LeaveApplication, LEAVE_TYPES } from '../../types/leave';
 import { format, differenceInDays, isBefore } from 'date-fns';
 import toast from 'react-hot-toast';
 import { fetchPendingApprovals, submitLeaveDecision } from '../../api';
@@ -146,7 +146,6 @@ const ApprovalDashboard: React.FC = () => {
   
         const data = await fetchPendingApprovals(user?.role);
         console.log("Pending approvals response:", data);
-        console.log("Raw JSON data:", JSON.stringify(data, null, 2));
         const parsed = data
         .map((leave: LeaveApplication) => {
         
@@ -424,6 +423,9 @@ const ApprovalDashboard: React.FC = () => {
   };
   
   const filteredApprovals = pendingApprovals.filter(leave => {
+    if (user?.role === 'hod' && leave.applicantDepartment !== user.department) {
+      return false;
+    }
     if (filterDepartment !== 'all' && leave.applicantDepartment !== filterDepartment) return false;
     if (filterType !== 'all' && leave.leaveType !== filterType) return false;
     if (filterUrgent && !leave.isUrgent) return false;

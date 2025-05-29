@@ -65,7 +65,7 @@ const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        department: user.department  // ✅ ADD THIS
+        department: user.department
       }
     });
   } catch (err) {
@@ -94,25 +94,6 @@ const sendOtpToUser = async (req, res) => {
     res.status(500).json({ message: 'Error sending OTP' });
   }
 };
-
-/* const verifyOtp = async (req, res) => {
-  const { email, otp } = req.body;
-
-  try {
-    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    const user = userResult.rows[0];
-
-    if (!user || user.otp !== otp) {
-      return res.status(400).json({ message: 'Invalid OTP' });
-    }
-
-    await pool.query('UPDATE users SET is_verified = true, otp = NULL WHERE email = $1', [email]);
-    res.status(200).json({ message: 'OTP verified successfully' });
-  } catch (err) {
-    console.error('OTP verification error:', err);
-    res.status(500).json({ message: 'Error verifying OTP' });
-  }
-}; */
 
 const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
@@ -163,5 +144,5 @@ module.exports = {
   loginUser,
   sendOtpToUser,
   verifyOtp,
-  resetPassword // ✅ Include it if you're using it
+  resetPassword
 };

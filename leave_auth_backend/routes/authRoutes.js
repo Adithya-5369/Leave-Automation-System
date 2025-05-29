@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 
-// ❌ One of these might be undefined or mistyped
 router.post('/register', authController.registerUser);
 router.post('/login', authController.loginUser);
 router.post('/send-otp', authController.sendOtpToUser);
