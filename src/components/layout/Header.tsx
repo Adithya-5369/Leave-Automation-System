@@ -4,18 +4,19 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Notification } from '../../types/leave';
 import { formatDistanceToNow } from 'date-fns';
-import { isAdhoc } from '../../utils/roleHelpers';
+//import { isAdhoc } from '../../utils/roleHelpers';
+import { fetchNotifications, markNotificationAsRead } from '../../api';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [readNotifications, setReadNotifications] = useState<string[]>([]);
+  //const [readNotifications, setReadNotifications] = useState<string[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  // Load read notifications from localStorage
+  /*// Load read notifications from localStorage
   useEffect(() => {
     const storedRead = localStorage.getItem('readNotifications');
     if (storedRead) {
@@ -139,14 +140,47 @@ const Header: React.FC = () => {
 
     setNotifications(roleBasedNotifications);
     setUnreadCount(roleBasedNotifications.filter(n => !n.read).length);
-  }, [user, readNotifications]);
+  }, [user, readNotifications]);*/
+
+  useEffect(() => {
+    const loadNotifications = async () => {
+      if (!user?.id) return;
+  
+      try {
+        const data = await fetchNotifications(user.id); // 👈 make sure this function exists
+        interface NotificationData {
+          id: number;
+          message: string;
+          created_at: string;
+          is_read: boolean;
+        }
+
+        const parsed = data.map((n: NotificationData) => ({
+          id: n.id.toString(),
+          type: n.message.includes('approval') ? 'approval' : 'status',
+          message: n.message,
+          timestamp: new Date(n.created_at),
+          read: n.is_read,
+          link: n.message.includes('approval') ? '/approvals' : '/leave-status',
+        }));
+  
+        setNotifications(parsed);
+        setUnreadCount(parsed.filter((n: Notification) => !n.read).length);
+      } catch (error) {
+        console.error('Failed to load notifications:', error);
+      }
+    };
+  
+    loadNotifications();
+  }, [user]);
+  
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const handleNotificationClick = (notification: Notification) => {
+  /*const handleNotificationClick = (notification: Notification) => {
     if (!notification.read) {
       const newReadNotifications = [...readNotifications, notification.id];
       setReadNotifications(newReadNotifications);
@@ -156,13 +190,43 @@ const Header: React.FC = () => {
     if (notification.link) {
       navigate(notification.link as string);
     }
+  };*/
+
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.read) {
+      await markNotificationAsRead(Number(notification.id));
+      const updated = notifications.map((n) =>
+        n.id === notification.id ? { ...n, read: true } : n
+      );
+      setNotifications(updated);
+      setUnreadCount(prev => prev - 1);
+    }
+    if (notification.link) {
+      navigate(notification.link);
+    }
   };
 
-  const markAllAsRead = () => {
+  /*const markAllAsRead = () => {
     const allNotificationIds = notifications.map(n => n.id);
     setReadNotifications(allNotificationIds);
     localStorage.setItem('readNotifications', JSON.stringify(allNotificationIds));
     setUnreadCount(0);
+  };*/
+
+  const markAllAsRead = async () => {
+    try {
+      const unread = notifications.filter(n => !n.read);
+  
+      // Send mark-read requests to backend
+      await Promise.all(unread.map(n => markNotificationAsRead(Number(n.id))));
+  
+      // Update frontend state
+      const updated = notifications.map(n => ({ ...n, read: true }));
+      setNotifications(updated);
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
   };
 
   const getNotificationIcon = (type: string) => {

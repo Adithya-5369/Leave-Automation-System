@@ -1,9 +1,8 @@
-// server.js
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { Pool } = require('pg');
-const detectSqlInjection = require('./middleware/sqlInjectionGuard'); // ✅ Import it here
+const detectSqlInjection = require('./middleware/sqlInjectionGuard');
 
 dotenv.config();
 
@@ -28,10 +27,12 @@ const pool = new Pool({
   port: process.env.PG_PORT,
 });
 
-// ✅ Use routes with SQL Injection middleware
+
 const authRoutes = require('./routes/authRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
+app.use('/api/notifications', notificationRoutes);
 app.use('/auth', detectSqlInjection, authRoutes);
 app.use('/auth/leave', detectSqlInjection, leaveRoutes);
 app.use('/uploads', express.static('uploads'));

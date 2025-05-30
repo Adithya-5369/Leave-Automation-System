@@ -13,9 +13,9 @@ import { LeaveBalance, LeaveApplication, LeaveApplicationRaw, LEAVE_TYPES, Leave
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, differenceInDays } from 'date-fns';
 import { isApprover} from '../../utils/roleHelpers';
-import { fetchUserLeaves } from '../../api';
+import { fetchUserLeaves, fetchPendingApprovals } from '../../api';
 
-// Mock data
+/*// Mock data
 const mockLeaveBalances: LeaveBalance[] = [
   { leaveType: 'CL', total: 8, used: 2, remaining: 6 },
   { leaveType: 'EL', total: 30, used: 5, remaining: 25 },
@@ -176,7 +176,7 @@ const mockPendingApprovals: LeaveApplication[] = [
     ],
     currentApprover: 'hod'
   }
-];
+];*/
 
 const leaveUsageData = [
   { name: 'Jan', CL: 1, EL: 0, SPCL: 0, OD: 0, AHL: 2 },
@@ -197,14 +197,54 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        // Set mock leave balances as usual
+        // Fetch leave balances from the backend
         setLeaveBalances(leaveBalances);
   
-        // Optional: set pending approvals if the user is an approver
+        // set pending approvals if the user is an approver
         if (isApprover(user?.role)) {
-          setPendingApprovals(pendingApprovals); // Replace later with real data
+          if (user?.role) {
+            const data = await fetchPendingApprovals(user.role);
+            console.log("Pending approvals response:", data);
+            const parsed = data
+            .map((leave: LeaveApplication) => {
+            
+                return {
+                  id: leave.id,
+                  applicantId: leave.applicantId,
+                  applicantName: leave.applicantName,
+                  applicantDepartment: leave.applicantDepartment,
+                  leaveType: leave.leaveType,
+                  startDate: new Date(leave.startDate),
+                  endDate: new Date(leave.endDate),
+                  reason: leave.reason,
+                  isUrgent: leave.isUrgent,
+                  alternateArrangements: leave.alternateArrangements,
+                  contactDuringLeave: leave.contactDuringLeave,
+                  documents: leave.documents ?? [],
+                  status: leave.status,
+                  createdAt: new Date(leave.createdAt),
+                  updatedAt: new Date(leave.updatedAt),
+                  approvalChain: (leave.approvalChain ?? []).map((step) => ({
+                    ...step,
+                    timestamp: step.timestamp ? new Date(step.timestamp) : undefined,
+                  })),
+                  currentApprover: leave.currentApprover
+                };
+            });
+
+            const filtered = parsed.filter((leave: LeaveApplication) => {
+              if (user?.role === 'hod' && leave.applicantDepartment !== user.department) {
+                return false;
+              }
+              if (leave.status === 'pending' && leave.currentApprover === user.role) {
+                return true;
+              }
+              return false;
+            });
+
+            setPendingApprovals(filtered);
+          }
         }
-  
         // Only continue if user ID exists
         if (!user?.id) return;
   
@@ -281,10 +321,6 @@ const Dashboard: React.FC = () => {
     const days = differenceInDays(end, start) + 1;
     return `${days} day${days > 1 ? 's' : ''}`;
   };
-
-  // Get leave balances from localStorage
-  const storedBalances = sessionStorage.getItem('leaveBalances');
-  const userBalances = storedBalances ? JSON.parse(storedBalances) : {};
 
   // Define allowed days for each leave type
   const allowedDays = {
@@ -514,7 +550,7 @@ const Dashboard: React.FC = () => {
                           ) : (
                             <div className="flex items-center text-red-600">
                               <XCircle className="h-3 w-3 mr-1" />
-                              Rejected by {leave.approvalChain[leave.approvalChain.length - 1].role.toUpperCase()}
+                              Rejected by {leave.approvalChain[leave.approvalChain.length - 2].role.toUpperCase()}
                               {leave.approvalChain[leave.approvalChain.length - 1].comment && (
                                 <span className="ml-1">
                                   : {leave.approvalChain[leave.approvalChain.length - 1].comment}

@@ -141,9 +141,6 @@ const ApprovalDashboard: React.FC = () => {
 
       if (!user?.role) return;
   
-        /*const response = await fetchPendingApprovals(user.role);
-        if (!response.ok) throw new Error('Failed to fetch approvals');*/
-  
         const data = await fetchPendingApprovals(user?.role);
         console.log("Pending approvals response:", data);
         const parsed = data
@@ -152,6 +149,8 @@ const ApprovalDashboard: React.FC = () => {
           return {
             id: leave.id,
             applicantId: leave.applicantId,
+            applicantName: leave.applicantName,
+            applicantDepartment: leave.applicantDepartment,
             leaveType: leave.leaveType,
             startDate: new Date(leave.startDate),
             endDate: new Date(leave.endDate),
@@ -210,78 +209,6 @@ const ApprovalDashboard: React.FC = () => {
     setSelectedLeaves([]);
     setShowBulkComment(false);
   };
-
-  /*const handleApprove = (id: string) => {
-    if (!commentText.trim()) {
-      toast.error('Please add a comment before approving');
-      return;
-    }
-    
-    setPendingApprovals(prev => 
-      prev.filter(leave => leave.id !== id)
-    );
-    
-    setSelectedLeaves(prev => prev.filter(leaveId => leaveId !== id));
-    toast.success('Leave application approved successfully');
-    setExpandedLeave(null);
-    setCommentText('');
-  };
-
-  const handleReject = (id: string) => {
-    if (!commentText.trim()) {
-      toast.error('Please add a comment before rejecting');
-      return;
-    }
-    
-    setPendingApprovals(prev => 
-      prev.filter(leave => leave.id !== id)
-    );
-    
-    setSelectedLeaves(prev => prev.filter(leaveId => leaveId !== id));
-    toast.success('Leave application rejected');
-    setExpandedLeave(null);
-    setCommentText('');
-  };
-
-  const handleBulkApprove = () => {
-    if (selectedLeaves.length === 0) {
-      toast.error('Please select at least one application to approve');
-      return;
-    }
-    if (!commentText.trim()) {
-      toast.error('Please add a comment before approving');
-      return;
-    }
-
-    setPendingApprovals(prev =>
-      prev.filter(leave => !selectedLeaves.includes(leave.id))
-    );
-    
-    setSelectedLeaves([]);
-    setShowBulkComment(false);
-    toast.success(`${selectedLeaves.length} leave application(s) approved successfully`);
-    setCommentText('');
-  };
-
-  const handleBulkReject = () => {
-    if (selectedLeaves.length === 0) {
-      toast.error('Please select at least one application to reject');
-      return;
-    }
-    if (!commentText.trim()) {
-      toast.error('Please add a comment before rejecting');
-      return;
-    }
-
-    setPendingApprovals(prev =>
-      prev.filter(leave => !selectedLeaves.includes(leave.id))
-    );
-    
-    setSelectedLeaves([]);
-    setShowBulkComment(false);
-    toast.success(`${selectedLeaves.length} leave application(s) rejected`);
-    setCommentText('');
-  };*/
 
   const handleApprove = async (id: string) => {
     if (!commentText.trim()) {
@@ -423,6 +350,7 @@ const ApprovalDashboard: React.FC = () => {
   };
   
   const filteredApprovals = pendingApprovals.filter(leave => {
+    console.log("Applicant Department:", leave.applicantDepartment);
     if (user?.role === 'hod' && leave.applicantDepartment !== user.department) {
       return false;
     }

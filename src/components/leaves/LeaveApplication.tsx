@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 const LeaveApplication: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-const role = user?.role;
+  const role = user?.role;
   const [leaveType, setLeaveType] = useState<LeaveType>('CL');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -21,132 +21,6 @@ const role = user?.role;
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
   const selectedPolicy = LEAVE_POLICIES.find(policy => policy.leaveType === leaveType);
-
-  /*const getApprovalChain = (leaveType: string, role: string): string[] => {
-    const leaveTypesNeedingDirector = ['SPCL', 'CCL', 'OD', 'ML', 'PL'];
-    const normalizedLeaveType = leaveType.toUpperCase();
-    const chain: string[] = [];
-  
-    switch (role.toLowerCase()) {
-      case 'faculty':
-        chain.push('hod', 'dean');
-        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
-          chain.push('director');
-        }
-        break;
-  
-      case 'hod':
-        chain.push('dean');
-        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
-          chain.push('director');
-        }
-        break;
-  
-      case 'dean':
-        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
-          chain.push('director');
-        }
-        break;
-  
-      case 'registrar':
-        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
-          chain.push('director');
-        }
-        break;
-  
-      case 'nonteaching':
-        chain.push('hod', 'registrar');
-        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
-          chain.push('director');
-        }
-        break;
-  
-      case 'adhoc':
-        chain.push('hod');
-        break;
-  
-      default:
-        break;
-    }
-  
-    return chain;
-  };*/
-  
-
-  
-
-  /*const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-  
-    if (!startDate || !endDate || !reason) {
-      toast.error('Please fill all required fields');
-      return;
-    }
-  
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-  
-    if (end < start) {
-      toast.error('End date cannot be before start date');
-      return;
-    }
-  
-    setIsSubmitting(true);
-  
-    try {
-      const approvalChain = getApprovalChain(leaveType, user?.role || '');
-      
-      // Create new leave application
-      const newLeave = {
-        id: Date.now().toString(), // Generate unique ID
-        applicantId: user?.id || '',
-        applicantName: user?.name || '',
-        applicantDepartment: user?.department || '',
-        leaveType,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-        reason,
-        isUrgent,
-        status: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        approvalChain: approvalChain.map(role => ({
-          role,
-          status: role === approvalChain[0] ? 'pending' : 'not_started'
-        })),
-        currentApprover: approvalChain[0],
-        alternateArrangements,
-        contactDuringLeave,
-        documents: documents.map(file => URL.createObjectURL(file))
-      };
-
-      // Get existing leaves from localStorage
-      const storedLeaves = sessionStorage.getItem('userLeaves');
-      const userLeaves = storedLeaves ? JSON.parse(storedLeaves) : [];
-
-      // Add new leave to the array
-      userLeaves.push(newLeave);
-
-      // Save back to localStorage
-      sessionStorage.setItem('userLeaves', JSON.stringify(userLeaves));
-
-      // Also store in a separate key for approvers
-      if (approvalChain.length > 0) {
-        const storedApprovals = sessionStorage.getItem('pendingApprovals');
-        const pendingApprovals = storedApprovals ? JSON.parse(storedApprovals) : [];
-        pendingApprovals.push(newLeave);
-        sessionStorage.setItem('pendingApprovals', JSON.stringify(pendingApprovals));
-      }
-
-      toast.success('Leave application submitted successfully!');
-      navigate('/leave-status');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to submit leave application';
-      toast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };*/
 
   type ApprovalStep = {
     role: string;
@@ -486,25 +360,6 @@ const role = user?.role;
             </div>
             
             {/* Approval Flow */}
-            {/*<div className="p-4 bg-gray-50 rounded-md">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Approval Flow</h3>
-              <div className="flex items-center">
-                {getApprovalChain(leaveType, role || '').map((approver, index, arr) => (
-                  <React.Fragment key={approver}>
-                    <div className="flex-1 text-center">
-                      <div className="h-8 w-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center mx-auto">
-                        {index + 1}
-                      </div>
-                      <p className="text-xs mt-1 capitalize">{approver}</p>
-                    </div>
-                    {index < arr.length - 1 && (
-                      <div className="w-full max-w-[50px] h-0.5 bg-gray-300"></div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>*/}
-
             <div className="p-4 bg-gray-50 rounded-md">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Approval Flow</h3>
               <div className="flex items-center">

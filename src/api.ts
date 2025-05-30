@@ -167,48 +167,21 @@ export const submitLeaveDecision = async ({
   return res.json();
 };
 
-
-/* interface LeaveData {
-  userId: string;
-  name: string;
-  email: string;
-  role: string;
-  department: string;
-  leaveType: string;
-  startDate: string;
-  endDate: string;
-  totalDays: number;
-  reason: string;
-  file?: File;
-  status?: string;
-  appliedOn?: string;
-  approverComments?: string;
-  approvalChain?: string[];
-  currentApprover?: string;
-}
-
-export const submitLeave = async (leaveData: LeaveData) => {
-  const formData = new FormData();
-
-  Object.entries(leaveData).forEach(([key, value]) => {
-    if (key === 'file' && value instanceof File) {
-      formData.append('file', value);
-    } else if (Array.isArray(value)) {
-      formData.append(key, JSON.stringify(value));
-    } else if (value !== undefined && value !== null) {
-      formData.append(key, value.toString());
-    }
-  });
-
-  const res = await axios.post(`${API_BASE_URL}/auth/leaves`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-
-  return res.data;
+export const fetchNotifications = async (userId: string) => {
+  const res = await fetch(`${API_BASE_URL}/notifications/${userId}`);
+  return res.json();
 };
 
+export const markNotificationAsRead = async (id: number) => {
+  await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+    method: 'PUT',
+  });
+};
 
-export const fetchUserLeaves = async (userId: string) => {
-  const res = await axios.get(`${API_BASE_URL}/auth/leaves/${userId}`);
-  return res.data;
-}; */
+export const addNotification = async (userId: string, message: string) => {
+  await fetch(`${API_BASE_URL}/notifications`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, message }),
+  });
+};

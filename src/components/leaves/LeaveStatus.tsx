@@ -16,7 +16,7 @@ import { LeaveApplication, LeaveApplicationRaw, LEAVE_TYPES, LeaveType } from '.
 import { format, differenceInDays } from 'date-fns';
 import { fetchUserLeaves } from '../../api';
 
-// Mock data
+/*// Mock data
 const mockLeaveApplications: LeaveApplication[] = [
   {
     id: '1',
@@ -59,110 +59,7 @@ const mockLeaveApplications: LeaveApplication[] = [
     alternateArrangements: 'Classes will be handled by PhD scholars',
     contactDuringLeave: '+91 9876543210'
   },
-  {
-    id: '3',
-    applicantId: '1',
-    applicantName: 'Faculty 3',
-    applicantDepartment: 'Computer Science',
-    leaveType: 'SPCL',
-    startDate: new Date(2025, 2, 20),
-    endDate: new Date(2025, 2, 25),
-    reason: 'Workshop at IIT Delhi on Advanced Machine Learning',
-    isUrgent: false,
-    status: 'rejected',
-    createdAt: new Date(2025, 2, 10),
-    updatedAt: new Date(2025, 2, 12),
-    approvalChain: [
-      { role: 'hod', status: 'approved', timestamp: new Date(2025, 2, 11), comment: 'Approved' },
-      { role: 'dean', status: 'rejected', timestamp: new Date(2025, 2, 12), comment: 'Insufficient details provided about workshop relevance' }
-    ],
-    currentApprover: 'dean',
-    alternateArrangements: 'Classes will be rescheduled',
-    contactDuringLeave: '+91 9876543210'
-  },
-  {
-    id: '4',
-    applicantId: '1',
-    applicantName: 'Faculty 4',
-    applicantDepartment: 'Computer Science',
-    leaveType: 'EL',
-    startDate: new Date(2025, 5, 1),
-    endDate: new Date(2025, 5, 15),
-    reason: 'Family vacation',
-    isUrgent: false,
-    status: 'pending',
-    createdAt: new Date(2025, 4, 20),
-    updatedAt: new Date(2025, 4, 20),
-    approvalChain: [
-      { role: 'hod', status: 'pending' }
-    ],
-    currentApprover: 'hod',
-    alternateArrangements: 'All classes and lab sessions will be handled by PhD scholars',
-    contactDuringLeave: '+91 9876543210, email@example.com'
-  },
-  {
-    id: '5',
-    applicantId: '1',
-    applicantName: 'Faculty 5',
-    applicantDepartment: 'Computer Science',
-    leaveType: 'ML',
-    startDate: new Date(2024, 11, 1),
-    endDate: new Date(2025, 1, 28),
-    reason: 'Maternity leave',
-    isUrgent: false,
-    status: 'approved',
-    createdAt: new Date(2024, 10, 1),
-    updatedAt: new Date(2024, 10, 5),
-    approvalChain: [
-      { role: 'hod', status: 'approved', timestamp: new Date(2024, 10, 2), comment: 'Approved' },
-      { role: 'dean', status: 'approved', timestamp: new Date(2024, 10, 3), comment: 'Approved' },
-      { role: 'director', status: 'approved', timestamp: new Date(2024, 10, 5), comment: 'Approved as per institute policy' }
-    ],
-    currentApprover: 'director',
-    alternateArrangements: 'Classes will be cancelled',
-    contactDuringLeave: '+91 9876543210'
-  },
-  {
-    id: '6',
-    applicantId: '1',
-    applicantName: 'Adhoc Faculty',
-    applicantDepartment: 'Computer Science',
-    leaveType: 'AHL',
-    startDate: new Date(2025, 3, 1), // April 1, 2025
-    endDate: new Date(2025, 3, 4),   // April 4, 2025 (4 days)
-    reason: 'Personal reasons',
-    isUrgent: false,
-    status: 'approved',
-    createdAt: new Date(2025, 2, 25),
-    updatedAt: new Date(2025, 2, 26),
-    approvalChain: [
-      { role: 'hod', status: 'approved', timestamp: new Date(2025, 2, 26), comment: 'Approved' }
-    ],
-    currentApprover: 'hod',
-    alternateArrangements: 'Classes will be rescheduled',
-    contactDuringLeave: '+91 9876543210'
-  },
-  {
-    id: '7',
-    applicantId: '1',
-    applicantName: 'Adhoc Faculty',
-    applicantDepartment: 'Computer Science',
-    leaveType: 'AHL',
-    startDate: new Date(2025, 1, 10), // Feb 10, 2025
-    endDate: new Date(2025, 1, 12),   // Feb 12, 2025 (3 days)
-    reason: 'Medical appointment',
-    isUrgent: true,
-    status: 'pending',
-    createdAt: new Date(2025, 1, 5),
-    updatedAt: new Date(2025, 1, 5),
-    approvalChain: [
-      { role: 'hod', status: 'pending' }
-    ],
-    currentApprover: 'hod',
-    alternateArrangements: 'Classes will be handled by a substitute',
-    contactDuringLeave: '+91 9876543210'
-  }
-];
+];*/
 
   const LeaveStatus: React.FC = () => {
   const { user } = useAuth();
@@ -246,20 +143,6 @@ const mockLeaveApplications: LeaveApplication[] = [
     const days = differenceInDays(end, start) + 1;
     return `${days} day${days > 1 ? 's' : ''}`;
   };
-  
-  /*const filteredLeaves = leaveApplications.filter(leave => {
-    // Role-based filtering
-    if (user?.role === 'adhoc') {
-      if (leave.leaveType !== 'AHL') return false; // Show only AHL for adhoc users
-    } else {
-      if (leave.leaveType === 'AHL') return false; // Exclude AHL for non-adhoc users
-    }
-  
-    // Apply status and type filters
-    if (filterStatus !== 'all' && leave.status !== filterStatus) return false;
-    if (filterType !== 'all' && leave.leaveType !== filterType) return false;
-    return true;
-  });*/
 
   const filteredLeaves = leaveApplications.filter(leave => {
     // Apply status filter
@@ -270,9 +153,6 @@ const mockLeaveApplications: LeaveApplication[] = [
   
     return true;
   });
-  
-  
-  
   
   console.log("Parsed leaves after filter:", filteredLeaves);
 

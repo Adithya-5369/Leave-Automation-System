@@ -58,7 +58,7 @@ export interface LeaveApplication {
   applicantId: string;
   applicantName: string;
   applicantDepartment: string;
-  leaveType: LeaveType; // notice this is not string, but enum type
+  leaveType: LeaveType;
   startDate: Date;
   endDate: Date;
   reason: string;
@@ -143,7 +143,7 @@ export const LEAVE_POLICIES: LeavePolicy[] = [
   },
   {
     leaveType: 'EL',
-    maxDuration: 30,
+    maxDuration: 300,
     eligibleRoles: ['faculty', 'hod', 'dean', 'registrar'],
     description: 'Earned leave accumulated based on service',
     approvalHierarchy: ['hod', 'dean fa', ' director'],
@@ -151,7 +151,7 @@ export const LEAVE_POLICIES: LeavePolicy[] = [
   },
   {
     leaveType: 'SPCL',
-    maxDuration: 15,
+    maxDuration: 10,
     eligibleRoles: ['faculty', 'hod', 'dean', 'registrar'],
     description: 'Special casual leave for conferences, workshops, etc.',
     approvalHierarchy: ['hod', 'dean fa', 'dy. director'],
@@ -206,7 +206,7 @@ export const LEAVE_POLICIES: LeavePolicy[] = [
   },
   {
     leaveType: 'AHL',
-    maxDuration: 12,
+    maxDuration: 10,
     eligibleRoles: ['adhoc'],
     description: 'Leave for adhoc faculty members',
     approvalHierarchy: ['hod'],
