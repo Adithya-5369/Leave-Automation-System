@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Calendar, 
-  Clock, 
-  FileText, 
+  Clock,
   CheckCircle, 
   XCircle, 
   AlertCircle,
@@ -205,9 +203,9 @@ const mockLeaveApplications: LeaveApplication[] = [
               {Object.entries(LEAVE_TYPES)
                 .filter(([type]) => {
                   if (user?.role === 'adhoc') {
-                    return type === 'AHL'; // Show only AHL for adhoc users
+                    return type === 'ACL'; // Show only ACL for adhoc users
                   } else {
-                    return type !== 'AHL'; // Exclude AHL for non-adhoc users
+                    return type !== 'ACL'; // Exclude ACL for regular users
                   }
                 })
                 .map(([type, label]) => (

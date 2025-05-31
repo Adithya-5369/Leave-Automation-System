@@ -33,14 +33,16 @@ const markAsRead = async (req, res) => {
 // Add a notification
 const addNotification = async (req, res) => {
   const { userId, message } = req.body;
+
   try {
     await pool.query(
-      'INSERT INTO notifications (user_id, message, is_read, created_at) VALUES ($1, $2, FALSE, NOW())',
+      `INSERT INTO notifications (user_id, message, is_read, created_at)
+       VALUES ($1, $2, false, NOW())`,
       [userId, message]
     );
-    res.status(201).json({ message: 'Notification added' });
+    res.status(201).json({ message: 'Notification added successfully' });
   } catch (err) {
-    console.error('Error adding notification:', err);
+    console.error('Error inserting notification:', err);
     res.status(500).json({ message: 'Failed to add notification' });
   }
 };

@@ -6,9 +6,7 @@ import {
   FileText, 
   ClipboardCheck, 
   CheckSquare, 
-  Users, 
-  Settings,
-  School
+  Users
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -48,7 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           {/* Sidebar header */}
           <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
             <div className="flex items-center">
-            <div class="logo-container"> <img src="images/logo.png" class="logo2" /> </div>
+            <div className="logo-container"> <img src="images/logo.png" className="logo2" /> </div>
               <span className="ml-2 text-lg font-semibold text-gray-800">NIT Andhra</span>
             </div>
             <button
@@ -96,15 +94,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           </nav>
           
           {/* Footer */}
-          {/* <div className="p-4 border-t border-gray-200">
-            <NavLink
-              to="/settings"
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100"
-            >
-              <Settings className="mr-3 h-5 w-5" />
-              Settings
-            </NavLink>
-          </div> */}
+          <div className="p-4 border-t border-gray-200 text-sm text-gray-500 text-center whitespace-nowrap">
+              Developed by{' '}
+              <a
+                href="https://www.linkedin.com/in/adithyasaisrinivas"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                Adithya Sai Srinivas
+              </a>
+          </div>
         </div>
       </div>
     </>

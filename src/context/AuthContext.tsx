@@ -12,10 +12,10 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  department?: string;
+  department: string;
   employeeType: EmployeeType;
   employeeCategory: EmployeeCategory;
-  level?: number;
+  level: number;
 }
 
 interface AuthContextType {

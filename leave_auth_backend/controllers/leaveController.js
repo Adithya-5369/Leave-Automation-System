@@ -1,8 +1,11 @@
 const pool = require('../db');
+const { differenceInBusinessDays } = require('date-fns');
 
 const submitLeaveApplication = async (req, res) => {
   const {
     applicantId,
+    applicantName,
+    applicantDepartment,
     leaveType,
     startDate,
     endDate,
@@ -38,6 +41,39 @@ const submitLeaveApplication = async (req, res) => {
         currentApprover
       ]
     );
+
+    // Notify first approver
+    let approverId = null;
+
+    if (currentApprover === 'director') {
+      // Director doesn't have department
+      const director = await pool.query(`SELECT id FROM users WHERE role = 'director' LIMIT 1`);
+      approverId = director.rows[0]?.id;
+    } else if (currentApprover === 'registrar') {
+      const registrar = await pool.query(`SELECT id FROM users WHERE role = 'registrar' LIMIT 1`);
+      approverId = registrar.rows[0]?.id;
+    } else {
+      const approver = await pool.query(
+        `SELECT id FROM users WHERE role = $1 AND department = $2 LIMIT 1`,
+        [currentApprover, applicantDepartment]
+      );
+      approverId = approver.rows[0]?.id;
+    }
+
+    // 3. Insert notification for approver
+    if (approverId) {
+      await pool.query(
+        `INSERT INTO notifications (user_id, message, is_read, created_at, type)
+        VALUES ($1, $2, false, NOW(), $5)`,
+        [
+          approverId,
+          `${applicantName} submitted a ${leaveType} leave request`,
+          'approval'
+        ]
+      );
+    } else {
+      console.warn('No approver found for role:', currentApprover, 'in department:', applicantDepartment);
+    }
 
     res.status(201).json({ message: 'Leave application submitted', application: result.rows[0] });
   } catch (err) {
@@ -99,45 +135,6 @@ const getUserLeaves = async (req, res) => {
   } catch (err) {
     console.error('Error in getUserLeaves:', err);
     res.status(500).json({ message: 'Failed to fetch leaves' });
-  }
-};    
-
-const updateLeaveBalance = async (req, res) => {
-  const { userId, leaveType, days } = req.body;
-
-  try {
-    // First check if the user has a leave balance record
-    const checkResult = await pool.query(
-      `SELECT * FROM leave_balances 
-       WHERE user_id = $1 AND leave_type = $2`,
-      [userId, leaveType]
-    );
-
-    if (checkResult.rows.length === 0) {
-      // If no record exists, create one with default values
-      await pool.query(
-        `INSERT INTO leave_balances (user_id, leave_type, total, used, remaining)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [userId, leaveType, 30, days, 30 - days] // Default total of 30 days
-      );
-    } else {
-      // Update existing record
-      const currentBalance = checkResult.rows[0];
-      const newUsed = currentBalance.used + days;
-      const newRemaining = currentBalance.total - newUsed;
-
-      await pool.query(
-        `UPDATE leave_balances 
-         SET used = $1, remaining = $2
-         WHERE user_id = $3 AND leave_type = $4`,
-        [newUsed, newRemaining, userId, leaveType]
-      );
-    }
-
-    res.status(200).json({ message: 'Leave balance updated successfully' });
-  } catch (err) {
-    console.error('Error updating leave balance:', err);
-    res.status(500).json({ message: 'Failed to update leave balance' });
   }
 };
 
@@ -260,6 +257,40 @@ const handleLeaveDecision = async (req, res) => {
       [JSON.stringify(updatedChain), nextApprover || approverRole, finalStatus, leaveId]
     );
 
+    // 7. Notify applicant with status update
+    await pool.query(
+      `INSERT INTO notifications (user_id, message, is_read, created_at, type)
+       VALUES ($1, $2, FALSE, NOW(), $3)`,
+      [
+        leave.applicant_id,
+        `Your ${leave.leave_type} leave has been ${finalStatus} by ${approverRole.toUpperCase()}`,
+        'status'
+      ]
+    );
+
+    // 8. Notify next approver (if any)
+    if (nextApprover && finalStatus === 'pending') {
+    
+      const approverResult = await pool.query(
+        'SELECT id FROM users WHERE role = $1 LIMIT 1',
+        [nextApprover]
+      );
+    
+      const nextApproverId = approverResult.rows[0]?.id;
+    
+      if (nextApproverId) {
+        await pool.query(
+          `INSERT INTO notifications (user_id, message, is_read, created_at, type)
+           VALUES ($1, $2, FALSE, NOW(), $3)`,
+          [
+            nextApproverId,
+            `${leave.applicant_name || 'A user'} submitted a ${leave.leave_type} leave request.`,
+            'approval'
+          ]
+        );
+      }
+    }
+
     res.status(200).json({ message: `Leave ${action}d successfully` });
   } catch (error) {
     console.error('Error in handleLeaveDecision:', error);
@@ -267,11 +298,103 @@ const handleLeaveDecision = async (req, res) => {
   }
 };
 
+const getLeaveUsageStats = async (req, res) => {
+  const { userId } = req.query;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required' });
+  }
+
+  try {
+    const result = await pool.query(`
+      SELECT
+        TO_CHAR(created_at, 'Mon') AS month,
+        leave_type,
+        COUNT(*) AS count
+      FROM leave_applications
+      WHERE applicant_id = $1 AND status = 'approved'
+        AND created_at >= DATE_TRUNC('year', NOW()) -- Only this year's data
+        AND created_at < DATE_TRUNC('year', NOW() + INTERVAL '1 year') -- Up to the end of this year
+      GROUP BY month, leave_type
+      ORDER BY MIN(created_at)
+    `, [userId]);
+
+    const monthlyData = {};
+    result.rows.forEach(row => {
+      const { month, leave_type, count } = row;
+      if (!monthlyData[month]) monthlyData[month] = { month };
+      monthlyData[month][leave_type] = Number(count);
+    });
+
+    res.json(Object.values(monthlyData));
+  } catch (err) {
+    console.error('Error fetching leave usage stats:', err);
+    res.status(500).json({ message: 'Failed to fetch leave usage stats' });
+  }
+};
+
+const getLeaveBalances = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // ✅ Get user role first
+    const userRes = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const userRole = userRes.rows[0].role;
+
+    // 1. Get all leave types with default days
+    const leaveTypesRes = await pool.query('SELECT code, name, default_days FROM leave_types');
+    const leaveTypes = leaveTypesRes.rows;
+
+    // 2. Get all approved leaves for this user
+    const leavesRes = await pool.query(
+      `SELECT leave_type, start_date, end_date
+       FROM leave_applications
+       WHERE applicant_id = $1 AND status = 'approved'`,
+      [userId]
+    );
+
+    const appliedLeaves = leavesRes.rows;
+
+    // ✅ Filter ACL for adhoc only
+    const filteredTypes = leaveTypes.filter(type => {
+      if (userRole === 'adhoc') return type.code === 'ACL';
+      return type.code !== 'ACL';
+    });
+
+    // 3. Calculate usage per leave type
+    const balances = filteredTypes.map((type) => {
+      const usedDays = appliedLeaves
+        .filter(leave => leave.leave_type === type.code)
+        .reduce((sum, leave) => {
+          const start = new Date(leave.start_date);
+          const end = new Date(leave.end_date);
+          return sum + (differenceInBusinessDays(end, start) + 1);
+        }, 0);
+
+      return {
+        type: type.code,
+        name: type.name,
+        total: type.default_days,
+        used: usedDays,
+        remaining: Math.max(type.default_days - usedDays, 0)
+      };
+    });
+
+    res.json(balances);
+  } catch (err) {
+    console.error('Error fetching leave balances:', err);
+    res.status(500).json({ message: 'Failed to fetch leave balances' });
+  }
+};
 
 module.exports = {
   submitLeaveApplication,
   getUserLeaves,
-  updateLeaveBalance,
   getPendingApprovals,
-  handleLeaveDecision
+  handleLeaveDecision,
+  getLeaveUsageStats,
+  getLeaveBalances
 };

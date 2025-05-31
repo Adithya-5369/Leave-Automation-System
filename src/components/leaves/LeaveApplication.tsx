@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, FileText, Info, AlertCircle } from 'lucide-react';
+import { Calendar, FileText, Info, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { LeaveType, LEAVE_TYPES, LEAVE_POLICIES } from '../../types/leave';
 import toast from 'react-hot-toast';
@@ -156,8 +156,8 @@ const LeaveApplication: React.FC = () => {
 
     if (!policy) return false;
 
-    // AHL should only be visible to 'adhoc' users
-    if (type === 'AHL') return role === 'adhoc';
+    // ACL should only be visible to 'adhoc' users
+    if (type === 'ACL') return role === 'adhoc';
 
     // Other leave types should not be available for 'adhoc' users
     if (role === 'adhoc') return false;

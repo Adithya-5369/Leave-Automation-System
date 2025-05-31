@@ -1,6 +1,7 @@
 import { User, UserRole } from '../context/AuthContext';
 
 export type LeaveType = 
+    'ACL' // Adhoc Casual Leave
   | 'CL' // Casual Leave
   | 'RH' // Restricted Holiday
   | 'EL' // Earned Leave
@@ -12,8 +13,7 @@ export type LeaveType =
   | 'VL' // Vacation Leave
   | 'SL' // Station Leave
   | 'OD' // On Duty Leave
-  | 'EOL' // Extra Ordinary Leave
-  | 'AHL'; // Adhoc Leave
+  | 'EOL'; // Extra Ordinary Leave
 
 export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'forwarded';
 
@@ -31,26 +31,6 @@ export interface ApprovalStep {
   timestamp?: Date;
   user?: User;
 }
-
-/*export interface LeaveApplication {
-  id: string;
-  applicantId: string;
-  applicantName: string;
-  applicantDepartment: string;
-  leaveType: LeaveType;
-  startDate: Date;
-  endDate: Date;
-  reason: string;
-  isUrgent: boolean;
-  status: LeaveStatus;
-  createdAt: Date;
-  updatedAt: Date;
-  documents?: string[];
-  approvalChain: ApprovalStep[];
-  currentApprover: UserRole;
-  alternateArrangements?: string;
-  contactDuringLeave?: string;
-}*/
 
 // Final frontend format (for displaying in dashboard)
 export interface LeaveApplication {
@@ -107,7 +87,7 @@ export interface LeaveApplicationRaw {
 
 export interface LeavePolicy {
   leaveType: LeaveType;
-  maxDuration: number;
+  maxDuration: number | null;
   eligibleRoles: string[];
   description: string;
   approvalHierarchy: string[];
@@ -117,6 +97,7 @@ export interface LeavePolicy {
 }
 
 export const LEAVE_TYPES: Record<LeaveType, string> = {
+  ACL: 'Adhoc Casual Leave',
   CL: 'Casual Leave',
   RH: 'Restricted Holiday',
   EL: 'Earned Leave',
@@ -128,8 +109,7 @@ export const LEAVE_TYPES: Record<LeaveType, string> = {
   VL: 'Vacation Leave',
   SL: 'Station Leave',
   OD: 'On Duty Leave',
-  EOL: 'Extra Ordinary Leave',
-  AHL: 'Leave (Adhoc)'
+  EOL: 'Extra Ordinary Leave'
 };
 
 export const LEAVE_POLICIES: LeavePolicy[] = [
@@ -137,23 +117,40 @@ export const LEAVE_POLICIES: LeavePolicy[] = [
     leaveType: 'CL',
     maxDuration: 8,
     eligibleRoles: ['faculty', 'hod', 'dean', 'registrar'],
-    description: 'Casual leave for short absences',
+    description: 'Casual leave for short absences; not carried over year to year.',
     approvalHierarchy: ['hod', 'dean fa', 'director'],
     eligibleEmployeeTypes: ['regular']
   },
   {
+    leaveType: 'RH',
+    maxDuration: 2,
+    eligibleRoles: ['faculty', 'hod', 'dean', 'registrar', 'non-teaching'],
+    description: 'Restricted Holidays chosen from the list of optional holidays.',
+    approvalHierarchy: ['hod'],
+    documents: ['RH Selection Form'],
+    eligibleEmployeeTypes: ['regular']
+  },  
+  {
     leaveType: 'EL',
     maxDuration: 300,
-    eligibleRoles: ['faculty', 'hod', 'dean', 'registrar'],
-    description: 'Earned leave accumulated based on service',
+    eligibleRoles: ['faculty', 'hod', 'dean', 'registrar', 'director'],
+    description: 'Earned leave accumulated based on service; encashable and carried forward.',
     approvalHierarchy: ['hod', 'dean fa', ' director'],
     eligibleEmployeeTypes: ['regular']
   },
   {
+    leaveType: 'HPL',
+    maxDuration: 20, // Credited 20 days/year (10 + 10 in Jan/July)
+    eligibleRoles: ['faculty', 'hod', 'dean', 'registrar'],
+    description: 'Leave earned at half pay, usable with or without medical certificate.',
+    approvalHierarchy: ['hod', 'dean fa'],
+    eligibleEmployeeTypes: ['regular']
+  },  
+  {
     leaveType: 'SPCL',
     maxDuration: 10,
     eligibleRoles: ['faculty', 'hod', 'dean', 'registrar'],
-    description: 'Special casual leave for conferences, workshops, etc.',
+    description: 'Special casual leave for conferences, workshops, and external duties.',
     approvalHierarchy: ['hod', 'dean fa', 'dy. director'],
     documents: ['Invitation Letter', 'Conference Details'],
     eligibleEmployeeTypes: ['regular']
@@ -162,7 +159,7 @@ export const LEAVE_POLICIES: LeavePolicy[] = [
     leaveType: 'ML',
     maxDuration: 180,
     eligibleRoles: ['faculty', 'hod', 'dean', 'registrar'],
-    description: 'Maternity leave for female employees',
+    description: 'Maternity leave for female employees; available for first two surviving children.',
     approvalHierarchy: ['hod', 'dean fa', 'dy. director'],
     documents: ['Medical Certificate'],
     specialConditions: 'Available for female employees only',
@@ -172,7 +169,7 @@ export const LEAVE_POLICIES: LeavePolicy[] = [
     leaveType: 'OD',
     maxDuration: 15,
     eligibleRoles: ['faculty', 'hod', 'dean'],
-    description: 'On duty leave for official work outside the institute',
+    description: 'On duty leave for official assignments, inspections, paper-setting, etc.',
     approvalHierarchy: ['hod', 'dean fa', 'director'],
     documents: ['Invitation Letter', 'Official Work Details'],
     eligibleEmployeeTypes: ['regular']
@@ -181,7 +178,7 @@ export const LEAVE_POLICIES: LeavePolicy[] = [
     leaveType: 'PL',
     maxDuration: 15,
     eligibleRoles: ['faculty', 'hod', 'dean', 'registrar'],
-    description: 'Paternity leave for male employees',
+    description: 'Paternity leave for male employees during childbirth.',
     approvalHierarchy: ['hod', 'dean fa', 'director'],
     specialConditions: 'Available for male employees only',
     eligibleEmployeeTypes: ['regular']
@@ -190,25 +187,45 @@ export const LEAVE_POLICIES: LeavePolicy[] = [
     leaveType: 'CCL',
     maxDuration: 730,
     eligibleRoles: ['faculty', 'hod', 'dean', 'registrar'],
-    description: 'Child Care Leave for female employees with minor children',
+    description: 'Child Care Leave for female employees with minor children.',
     approvalHierarchy: ['hod', 'dean fa', 'director'],
     documents: ['Child Birth Certificate'],
     specialConditions: 'Available for female employees with children under 18 years',
     eligibleEmployeeTypes: ['regular']
   },
   {
-    leaveType: 'SL',
-    maxDuration: 30,
-    eligibleRoles: ['faculty', 'hod', 'dean', 'registrar'],
-    description: 'Station Leave for leaving headquarters during holidays or casual leave',
+    leaveType: 'VL',
+    maxDuration: null, // Depends on departmental vacation calendar
+    eligibleRoles: ['faculty', 'hod', 'dean', 'registrar', 'director'],
+    description: 'Vacation Leave for faculty in academic departments with vacation entitlement.',
     approvalHierarchy: ['hod', 'dean fa'],
+    specialConditions: 'Applicable only to Vacation Department staff.',
     eligibleEmployeeTypes: ['regular']
   },
   {
-    leaveType: 'AHL',
+    leaveType: 'SL',
+    maxDuration: 30,
+    eligibleRoles: ['faculty', 'hod', 'dean', 'registrar'],
+    description: 'Station Leave for going out of headquarters during off days or leave.',
+    approvalHierarchy: ['hod', 'dean fa'],
+    documents: ['Outstation Details', 'Leave Sanction Copy'],
+    eligibleEmployeeTypes: ['regular']
+  },
+  {
+    leaveType: 'EOL',
+    maxDuration: 90, // 5 years max in general
+    eligibleRoles: ['faculty', 'hod', 'dean', 'registrar'],
+    description: 'Leave without pay for personal, medical, or academic purposes when other leave is exhausted.',
+    approvalHierarchy: ['hod', 'dean fa', 'director'],
+    documents: ['Leave Application with Justification', 'Supporting Certificates (if medical/study)'],
+    specialConditions: 'Max 5 years for permanent staff; variable for temporary.',
+    eligibleEmployeeTypes: ['regular']
+  },  
+  {
+    leaveType: 'ACL',
     maxDuration: 10,
     eligibleRoles: ['adhoc'],
-    description: 'Leave for adhoc faculty members',
+    description: 'Adhoc Casual Leave for temporary/adhoc faculty.',
     approvalHierarchy: ['hod'],
     eligibleEmployeeTypes: ['adhoc']
   }
@@ -216,11 +233,10 @@ export const LEAVE_POLICIES: LeavePolicy[] = [
 
 export interface Notification {
   id: string;
-  type: 'approval' | 'status' | 'system';
-  title?: string;
+  user_id: string;
   message: string;
-  timestamp: Date;
   read: boolean;
-  link?: string;
+  created_at: string | Date;
+  type: 'approval' | 'status' | 'reminder' | 'system' | 'general';
 }
 

@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, LogOut, CheckCircle, Clock, Menu } from 'lucide-react';
+import { Bell, LogOut, CheckCircle, Clock, Menu, AlertTriangle, Info } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Notification } from '../../types/leave';
 import { formatDistanceToNow } from 'date-fns';
 //import { isAdhoc } from '../../utils/roleHelpers';
-import { fetchNotifications, markNotificationAsRead } from '../../api';
+import { markNotificationAsRead } from '../../api';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  setShowSidebar: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const Header: React.FC<HeaderProps> = ({ setShowSidebar }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
   const [unreadCount, setUnreadCount] = useState(0);
-  //const [readNotifications, setReadNotifications] = useState<string[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+
 
   /*// Load read notifications from localStorage
   useEffect(() => {
@@ -143,36 +148,30 @@ const Header: React.FC = () => {
   }, [user, readNotifications]);*/
 
   useEffect(() => {
-    const loadNotifications = async () => {
-      if (!user?.id) return;
+    if (!user?.id) return;
   
+    const fetchNotifications = async () => {
       try {
-        const data = await fetchNotifications(user.id); // 👈 make sure this function exists
-        interface NotificationData {
-          id: number;
-          message: string;
-          created_at: string;
-          is_read: boolean;
-        }
-
-        const parsed = data.map((n: NotificationData) => ({
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/${user.id}`);
+        const data = await res.json();
+        const parsed = data.map((n: { id: number; user_id: number; is_read: boolean; created_at: string; [key: string]: unknown }) => ({
+          ...n,
           id: n.id.toString(),
-          type: n.message.includes('approval') ? 'approval' : 'status',
-          message: n.message,
-          timestamp: new Date(n.created_at),
+          user_id: n.user_id.toString(),
           read: n.is_read,
-          link: n.message.includes('approval') ? '/approvals' : '/leave-status',
+          timestamp: new Date(n.created_at),
         }));
-  
+      
         setNotifications(parsed);
         setUnreadCount(parsed.filter((n: Notification) => !n.read).length);
       } catch (error) {
-        console.error('Failed to load notifications:', error);
+        console.error("Failed to fetch notifications", error);
       }
     };
   
-    loadNotifications();
+    fetchNotifications();
   }, [user]);
+  
   
 
   const handleLogout = () => {
@@ -180,64 +179,61 @@ const Header: React.FC = () => {
     navigate('/login');
   };
 
-  /*const handleNotificationClick = (notification: Notification) => {
-    if (!notification.read) {
-      const newReadNotifications = [...readNotifications, notification.id];
-      setReadNotifications(newReadNotifications);
-      localStorage.setItem('readNotifications', JSON.stringify(newReadNotifications));
-      setUnreadCount(prev => prev - 1);
-    }
-    if (notification.link) {
-      navigate(notification.link as string);
-    }
-  };*/
-
   const handleNotificationClick = async (notification: Notification) => {
-    if (!notification.read) {
-      await markNotificationAsRead(Number(notification.id));
-      const updated = notifications.map((n) =>
-        n.id === notification.id ? { ...n, read: true } : n
-      );
-      setNotifications(updated);
-      setUnreadCount(prev => prev - 1);
-    }
-    if (notification.link) {
-      navigate(notification.link);
-    }
+    try {
+      if (!notification.read) {
+        await markNotificationAsRead(Number(notification.id));
+        setNotifications((prev) =>
+          prev.map((n) =>
+          n.id === notification.id ? { ...n, is_read: true } : n
+          )
+        );
+        setUnreadCount((prev) => Math.max(prev - 1, 0));
+      }
+      // Redirect based on message keywords or roles
+      switch (notification.type) {
+        case 'approval':
+          navigate('/approvals');
+          break;
+        case 'status':
+          navigate('/leave-status');
+          break;
+        default:
+          navigate('/'); // fallback
+      }
+    } catch (error) {
+      console.error('Failed to mark notification as read or navigate:', error);
+      }
   };
-
-  /*const markAllAsRead = () => {
-    const allNotificationIds = notifications.map(n => n.id);
-    setReadNotifications(allNotificationIds);
-    localStorage.setItem('readNotifications', JSON.stringify(allNotificationIds));
-    setUnreadCount(0);
-  };*/
 
   const markAllAsRead = async () => {
     try {
-      const unread = notifications.filter(n => !n.read);
+      for (const notification of notifications.filter(n => !n.read)) {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/${notification.id}/read`, {
+          method: 'PUT',
+        });
+      }
   
-      // Send mark-read requests to backend
-      await Promise.all(unread.map(n => markNotificationAsRead(Number(n.id))));
-  
-      // Update frontend state
-      const updated = notifications.map(n => ({ ...n, read: true }));
+      // Refresh notifications
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/${user?.id}`);
+      const updated = await res.json();
       setNotifications(updated);
       setUnreadCount(0);
-    } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
     }
   };
+  
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'approval':
-        return <CheckCircle className="h-4 w-4 text-blue-500" />;
-      case 'status':
-        return <Clock className="h-4 w-4 text-orange-500" />;
-      default:
-        return <Bell className="h-4 w-4 text-gray-500" />;
-    }
+  const notificationIcons: Record<string, JSX.Element> = {
+    approval: <CheckCircle className="h-4 w-4 text-blue-500" />,
+    status: <Clock className="h-4 w-4 text-orange-500" />,
+    reminder: <AlertTriangle className="h-4 w-4 text-yellow-500" />,
+    system: <Info className="h-4 w-4 text-gray-600" />,
+  };
+    
+  const getNotificationIcon = (type: string): JSX.Element => {
+    return notificationIcons[type] || <Bell className="h-4 w-4 text-gray-500" />;
   };
 
   return (
@@ -247,7 +243,11 @@ const Header: React.FC = () => {
           <button
             type="button"
             className="text-gray-500 hover:text-gray-600 lg:hidden"
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={(e) => {
+              e.stopPropagation(); // prevent bubbling
+              setShowSidebar(prev => !prev); // <-- you should define this state
+            }}
+            
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -307,7 +307,7 @@ const Header: React.FC = () => {
                               {notification.message}
                             </p>
                             <p className="mt-1 text-xs text-gray-500">
-                              {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
+                              {formatDistanceToNow(notification.created_at, { addSuffix: true })}
                             </p>
                           </div>
                         </div>

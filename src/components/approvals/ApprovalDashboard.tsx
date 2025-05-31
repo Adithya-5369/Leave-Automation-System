@@ -171,7 +171,7 @@ const ApprovalDashboard: React.FC = () => {
       });
        
       setPendingApprovals(parsed);
-      console.log("Pending Approvals (before filter):", pendingApprovals);
+      //console.log("Pending Approvals (before filter):", pendingApprovals);
       } catch (error) {
         console.error('Error loading approvals:', error);
         toast.error('Failed to load pending approvals');

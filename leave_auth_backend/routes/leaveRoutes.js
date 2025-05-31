@@ -4,9 +4,10 @@ const router = express.Router();
 const {
   submitLeaveApplication,
   getUserLeaves,
-  updateLeaveBalance,
   getPendingApprovals,
-  handleLeaveDecision
+  handleLeaveDecision,
+  getLeaveUsageStats,
+  getLeaveBalances
 } = require('../controllers/leaveController');
 
 // 🗂️ File upload config
@@ -23,8 +24,9 @@ const upload = multer({ storage });
 // In your route file
 router.post('/apply', upload.array('documents', 5), submitLeaveApplication);
 router.get('/:userId', getUserLeaves); // GET /api/leaves/:userId
-router.post('/update-balance', updateLeaveBalance);
 router.get('/pending/:role', getPendingApprovals); // GET /api/auth/leaves/pending/:role
 router.post('/approve', handleLeaveDecision); // POST /api/auth/leaves/approve
+router.get('/usage/monthly', getLeaveUsageStats);
+router.get('/balances/:userId', getLeaveBalances);
 
 module.exports = router;

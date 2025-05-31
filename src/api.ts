@@ -185,3 +185,15 @@ export const addNotification = async (userId: string, message: string) => {
     body: JSON.stringify({ userId, message }),
   });
 };
+
+export const fetchLeaveUsageByMonth = async (userId: string) => {
+  const res = await fetch(`http://localhost:5000/auth/leave/usage/monthly/?userId=${userId}`);
+  if (!res.ok) throw new Error('Failed to fetch usage stats');
+  return res.json();
+};
+
+export const fetchLeaveBalances = async (userId: string) => {
+  const response = await fetch(`http://localhost:5000/auth/leave/balances/${userId}`);
+  if (!response.ok) throw new Error('Failed to fetch leave balances');
+    return await response.json();
+};
