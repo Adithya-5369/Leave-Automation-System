@@ -64,7 +64,7 @@ const submitLeaveApplication = async (req, res) => {
     if (approverId) {
       await pool.query(
         `INSERT INTO notifications (user_id, message, is_read, created_at, type)
-        VALUES ($1, $2, false, NOW(), $5)`,
+        VALUES ($1, $2, false, NOW(), $3)`,
         [
           approverId,
           `${applicantName} submitted a ${leaveType} leave request`,
