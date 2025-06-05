@@ -1,5 +1,5 @@
 
-# 📝 Leave Automation System for NIT Andhra Pradesh
+# 📝 Faculty Leave Automation for NIT Andhra Pradesh
 
 A secure, full-stack web platform designed to automate the multi-level leave request and approval process for faculty and staff at NIT Andhra Pradesh. This system addresses inefficiencies in manual workflows with digital dashboards, OTP login, structured approvals, and real-time analytics.
 
