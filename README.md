@@ -35,7 +35,7 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 
 | Layer         | Technology                    |
 |---------------|-------------------------------|
-| Frontend      | React.js, TypeScript          |
+| Frontend      | React.js, TypeScript, JavaScript, Vite.js, Tailwind CSS |
 | Backend       | Node.js, Express.js           |
 | Database      | PostgreSQL (BCNF normalized)  |
 | Authentication| Nodemailer (Email OTP)        |
