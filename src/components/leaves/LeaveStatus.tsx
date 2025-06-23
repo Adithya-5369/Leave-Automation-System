@@ -333,7 +333,7 @@ const mockLeaveApplications: LeaveApplication[] = [
                                   {step.status === 'reject' && <XCircle className="h-5 w-5" />}
                                   {step.status === 'pending' && <Clock className="h-5 w-5" />}
                                 </div>
-                                <p className="text-xs mt-1 capitalize">{step.role}</p>
+                                <p className="text-xs mt-1 capitalize">{step.role === 'dean' ? 'Dean F.A.' : step.role === 'director' ? 'Deputy Director' : step.role}</p>
                                 {step.timestamp && (
                                   <p className="text-xs text-gray-500">{format(new Date(step.timestamp), 'MMM dd')}</p>
                                 )}
@@ -367,7 +367,7 @@ const mockLeaveApplications: LeaveApplication[] = [
                           .map((step, index) => (
                             <div key={index} className="bg-gray-50 p-3 rounded-md">
                               <div className="flex items-center text-sm">
-                                <span className="font-medium capitalize">{step.role}:</span>
+                                <span className="font-medium capitalize">{step.role === 'dean' ? 'Dean F.A.' : step.role === 'director' ? 'Deputy Director' : step.role}:</span>
                                 <span className="ml-2 text-gray-600">{step.comment}</span>
                               </div>
                               {step.timestamp && (
