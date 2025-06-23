@@ -82,12 +82,13 @@ const Register: React.FC = () => {
               name="email"
               placeholder="Institute Email"
               value={formData.email}
-              onChange={(e) => {
+              onChange={handleChange}
+              onBlur={(e) => {
                 const email = e.target.value;
                 const emailRegex = /^[a-zA-Z0-9._%+-]+@nitandhra\.ac\.in$/;
-                handleChange(e); // Allow typing first
                 if (email && !emailRegex.test(email)) {
                 toast.error('Email must be a valid NIT Andhra Pradesh email (e.g., @nitandhra.ac.in)');
+                setFormData({ ...formData, email: '' });
                 }
               }}
               className="form-input pl-10"
