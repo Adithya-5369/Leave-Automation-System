@@ -84,12 +84,12 @@ const Register: React.FC = () => {
               value={formData.email}
               onChange={handleChange}
               onBlur={(e) => {
-              const email = e.target.value;
-              const emailRegex = /^[a-zA-Z0-9._%+-]+@(student\.)?nitandhra\.ac\.in$/;
-              if (email && !emailRegex.test(email)) {
-              toast.error('Email must be a valid NIT Andhra Pradesh email (e.g., @nitandhra.ac.in or @student.nitandhra.ac.in)');
-              setFormData({ ...formData, email: '' });
-              }
+                const email = e.target.value;
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@(student\.|faculty\.)?nitandhra\.ac\.in$/;
+                if (email && !emailRegex.test(email)) {
+                toast.error('Email must be a valid NIT Andhra Pradesh email (e.g., @nitandhra.ac.in, @student.nitandhra.ac.in, or @faculty.nitandhra.ac.in)');
+                setFormData({ ...formData, email: '' });
+                }
               }}
               className="form-input pl-10"
               />
