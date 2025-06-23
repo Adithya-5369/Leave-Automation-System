@@ -86,7 +86,7 @@ const Register: React.FC = () => {
                 const email = e.target.value;
                 const emailRegex = /^[a-zA-Z0-9._%+-]+@(student\.|faculty\.)?nitandhra\.ac\.in$/;
                 if (email && !emailRegex.test(email)) {
-                toast.error('Email must be a valid NIT Andhra Pradesh email (e.g., @nitandhra.ac.in, @student.nitandhra.ac.in, or @faculty.nitandhra.ac.in)');
+                toast.error('Email must be a valid NIT Andhra Pradesh email (e.g., @nitandhra.ac.in, or @faculty.nitandhra.ac.in)');
                 setFormData({ ...formData, email: '' });
                 }
               }}
