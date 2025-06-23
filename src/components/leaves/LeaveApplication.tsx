@@ -376,7 +376,9 @@ const LeaveApplication: React.FC = () => {
                       <div className="h-8 w-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center mx-auto">
                         {index + 1}
                       </div>
-                      <p className="text-xs mt-1 capitalize">{approver.role}</p>
+                        <p className="text-xs mt-1 capitalize">
+                        {approver.role === 'dean' ? 'Dean F.A.' : approver.role === 'director' ? 'Deputy Director' : approver.role}
+                        </p>
                     </div>
                     {index < arr.length - 1 && (
                       <div className="w-full max-w-[50px] h-0.5 bg-gray-300"></div>
