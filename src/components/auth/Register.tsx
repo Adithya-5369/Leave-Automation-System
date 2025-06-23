@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Briefcase, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const roles = ['adhoc', 'faculty', 'hod', 'dean', 'registrar', 'director'];
+const roles = ['adhoc', 'faculty', 'hod', 'deans', 'dean', 'registrar', 'director'];
 const departments = ['CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'MME', 'BIOTECH', 'CHEM', 'MATHS', 'PHYSICS', 'CHEMISTRY', 'HUMANITIES'];
 
 const Register: React.FC = () => {
