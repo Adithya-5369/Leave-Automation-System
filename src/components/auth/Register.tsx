@@ -133,8 +133,6 @@ const Register: React.FC = () => {
               </select>
             </div>
 
-
-
             <button
               type="submit"
               className="btn-primary w-full flex items-center justify-center"
