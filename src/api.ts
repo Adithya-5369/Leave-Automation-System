@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://fla-backend-dddo.onrender.com/api';
 
 export const registerUser = async (userData: {
   name: string;
@@ -187,13 +187,13 @@ export const addNotification = async (userId: string, message: string) => {
 };
 
 export const fetchLeaveUsageByMonth = async (userId: string) => {
-  const res = await fetch(`http://localhost:5000/auth/leave/usage/monthly/?userId=${userId}`);
+  const res = await fetch(`https://fla-backend-dddo.onrender.com/auth/leave/usage/monthly/?userId=${userId}`);
   if (!res.ok) throw new Error('Failed to fetch usage stats');
   return res.json();
 };
 
 export const fetchLeaveBalances = async (userId: string) => {
-  const response = await fetch(`http://localhost:5000/auth/leave/balances/${userId}`);
+  const response = await fetch(`https://fla-backend-dddo.onrender.com/auth/leave/balances/${userId}`);
   if (!response.ok) throw new Error('Failed to fetch leave balances');
     return await response.json();
 };
