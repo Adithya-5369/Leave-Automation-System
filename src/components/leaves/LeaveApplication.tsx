@@ -48,7 +48,14 @@ const LeaveApplication: React.FC = () => {
           roles.push('director');
         }
         break;
-  
+        
+      case 'deans':
+        roles.push('hod');
+        if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
+          roles.push('director');
+        }
+        break;
+
       case 'dean':
       case 'registrar':
         if (leaveTypesNeedingDirector.includes(normalizedLeaveType)) {
