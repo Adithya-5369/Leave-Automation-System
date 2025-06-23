@@ -78,12 +78,19 @@ const Register: React.FC = () => {
             <div className="relative">
               <Mail className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
               <input
-                type="email"
-                name="email"
-                placeholder="Institute Email"
-                value={formData.email}
-                onChange={handleChange}
-                className="form-input pl-10"
+              type="email"
+              name="email"
+              placeholder="Institute Email"
+              value={formData.email}
+              onChange={(e) => {
+                const email = e.target.value;
+                if (email.endsWith('nitandhra.ac.in') || email === '') {
+                handleChange(e);
+                } else {
+                toast.error('Email must end with nitandhra.ac.in');
+                }
+              }}
+              className="form-input pl-10"
               />
             </div>
 
