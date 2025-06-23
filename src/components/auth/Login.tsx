@@ -53,7 +53,7 @@ const Login: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="bg-orange-500 p-6 flex items-center justify-center">
-        <div class="logo-container"> <img src="images/logo.png" class="logo" /> </div>
+        <div className="logo-container"> <img src="images/logo.png" className="logo" /> </div>
           <div className="ml-4 text-white">
             <h1 className="text-2xl font-bold">NIT Andhra Pradesh</h1>
             <p className="text-orange-100">Faculty Leave Automation</p>
