@@ -390,11 +390,12 @@ const Dashboard: React.FC = () => {
           {user?.role === 'adhoc' && 'Adhoc Faculty'}
           {user?.role === 'faculty' && 'Faculty'}
           {user?.role === 'hod' && 'Head of Department'}
-          {user?.role === 'dean' && 'Dean'}
+          {user?.role === 'deans' && 'Dean'}
+          {user?.role === 'dean' && 'Dean F.A.'}
           {user?.role === 'registrar' && 'Registrar'}
-          {user?.role === 'director' && 'Director'}
+          {user?.role === 'director' && 'Deputy Director'}
           {user?.role === 'admin' && 'Administrator'}
-          {user?.department && ` • ${user.department}`}
+          {user?.department && ['adhoc', 'faculty', 'hod'].includes(user.role) && ` • ${user.department}`}
         </p>
       </div>
       

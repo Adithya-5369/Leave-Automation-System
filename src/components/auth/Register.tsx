@@ -116,7 +116,13 @@ const Register: React.FC = () => {
               >
               <option value="">Select Role</option>
               {roles.map((role) => {
-                const displayName = role === 'dean' ? 'Dean F.A.' : role.charAt(0).toUpperCase() + role.slice(1);
+                const displayName = role === 'hod' 
+                  ? 'HoD' 
+                  : role === 'dean' 
+                  ? 'Dean F.A.' 
+                  : role === 'director' 
+                  ? 'Deputy Director' 
+                  : role.charAt(0).toUpperCase() + role.slice(1);
                 return (
                 <option key={role} value={role}>
                   {displayName}
