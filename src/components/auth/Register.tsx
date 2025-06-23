@@ -50,9 +50,8 @@ const Register: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="bg-orange-500 p-6 flex items-center justify-center">
-          <div className="logo-container">
-            <img src="/images/logo.png" alt="logo" className="h-10 w-10" />
-          </div>
+          
+        <div className="logo-container"> <img src="images/logo.png" className="logo" /> </div>
           <div className="ml-4 text-white">
             <h1 className="text-2xl font-bold">NIT Andhra Pradesh</h1>
             <p className="text-orange-100">Faculty Leave Automation</p>
@@ -110,17 +109,20 @@ const Register: React.FC = () => {
             <div className="relative">
               <Briefcase className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
               <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="form-input pl-10"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="form-input pl-10"
               >
-                <option value="">Select Role</option>
-                {roles.map((role) => (
-                  <option key={role} value={role}>
-                    {role.charAt(0).toUpperCase() + role.slice(1)}
-                  </option>
-                ))}
+              <option value="">Select Role</option>
+              {roles.map((role) => {
+                const displayName = role === 'dean' ? 'Dean F.A.' : role.charAt(0).toUpperCase() + role.slice(1);
+                return (
+                <option key={role} value={role}>
+                  {displayName}
+                </option>
+                );
+              })}
               </select>
             </div>
 
