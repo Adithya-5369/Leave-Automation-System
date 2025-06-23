@@ -4,4 +4,4 @@ export const isApprover = (role: string | undefined) =>
 export const isAdhoc = (role: string | undefined) => role === 'adhoc';
   
 export const isFaculty = (role: string | undefined) =>
-    ['faculty', 'adhoc'].includes(role || '');
+    ['faculty', 'deans', 'adhoc'].includes(role || '');
