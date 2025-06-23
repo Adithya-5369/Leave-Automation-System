@@ -84,10 +84,11 @@ const Register: React.FC = () => {
               value={formData.email}
               onChange={(e) => {
                 const email = e.target.value;
-                if (email.endsWith('nitandhra.ac.in') || email === '') {
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@nitandhra\.ac\.in$/;
+                if (emailRegex.test(email) || email === '') {
                 handleChange(e);
                 } else {
-                toast.error('Email must end with nitandhra.ac.in');
+                toast.error('Email must be a valid NIT Andhra Pradesh email (e.g., @nitandhra.ac.in)');
                 }
               }}
               className="form-input pl-10"
