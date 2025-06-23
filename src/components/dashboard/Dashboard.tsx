@@ -395,8 +395,7 @@ const Dashboard: React.FC = () => {
           {user?.role === 'registrar' && 'Registrar'}
           {user?.role === 'director' && 'Deputy Director'}
           {user?.role === 'admin' && 'Administrator'}
-          if(user?.role === 'adhoc', 'faculty', 'hod') {
-              {user?.department ? ` • ${user.department}` : ''}
+          {['adhoc', 'faculty', 'hod'].includes(user?.role) && user?.department && ` • ${user.department}`}
         </p>
       </div>
       
