@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 
-export type UserRole = 'adhoc' | 'faculty' | 'hod' | 'dean' | 'registrar' | 'director' | 'admin';
+export type UserRole = 'adhoc' | 'faculty' | 'hod' | 'odean' | 'dean' | 'registrar' | 'director' | 'admin';
 export type EmployeeType = 'regular' | 'adhoc' | 'outsourced';
 export type EmployeeCategory = 'teaching' | 'non-teaching';
 
