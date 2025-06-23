@@ -4,6 +4,7 @@ import { Mail, Lock, User, Briefcase, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const roles = ['adhoc', 'faculty', 'hod', 'dean', 'registrar', 'director'];
+const departments = ['CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'MME', 'BIOTECH', 'CHEM', 'MATHS', 'PHYSICS', 'CHEMISTRY', 'HUMANITIES'];
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -117,15 +118,22 @@ const Register: React.FC = () => {
 
             <div className="relative">
               <Briefcase className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                name="department"
-                placeholder="Department"
-                value={formData.department}
-                onChange={handleChange}
-                className="form-input pl-10"
-              />
+              <select
+              name="department"
+              value={formData.department}
+              onChange={handleChange}
+              className="form-input pl-10"
+              >
+              <option value="">Select Department</option>
+              {departments.map((department) => (
+                <option key={department} value={department}>
+                {department}
+                </option>
+              ))}
+              </select>
             </div>
+
+
 
             <button
               type="submit"
