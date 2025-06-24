@@ -10,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
 // Cache prevention headers
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -42,6 +43,9 @@ app.use('/auth/leave', detectSqlInjection, leaveRoutes);
 app.use('/uploads', express.static('uploads'));
 app.use('/api/auth/leaves', leaveRoutes);
 
+
+
+
 pool.connect()
   .then(() => console.log('✅ Connected to PostgreSQL'))
   .catch(err => console.error('❌ PostgreSQL connection error:', err));
@@ -70,6 +74,11 @@ app.get('/api/auth/leaves/pending/:role', async (req, res) => {
     console.error('❌ Error fetching pending leaves:', err);
     res.status(500).json({ message: 'Failed to fetch pending leaves' });
   }
+});
+
+// Health check route to keep the server alive
+app.get('/health', (req, res) => {
+  res.status(200).send('Backend alive 🚀');
 });
 
 const PORT = process.env.PORT || 5000;
