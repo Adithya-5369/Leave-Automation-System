@@ -37,9 +37,9 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 |---------------|-------------------------------|
 | Frontend      | React.js, TypeScript, JavaScript, Vite.js, Tailwind CSS |
 | Backend       | Node.js, Express.js           |
-| Database      | PostgreSQL (BCNF normalized)  |
-| Authentication| Nodemailer (Email OTP)        |
-| Hosting       | Fly.io / Render (planned)              |
+| Database      | PostgreSQL (Normalized to BCNF)  |
+| Authentication| Nodemailer (Email-based OTP verification)        |
+| Deployment       | Frontend on Vercel, Backend on Render, PostgreSQL on Supabase              |
 
 ---
 
