@@ -160,18 +160,24 @@ const LeaveApplication: React.FC = () => {
   // Filter available leave types based on user role
   const availableLeaveTypes = Object.entries(LEAVE_TYPES).filter(([type]) => {
     const policy = LEAVE_POLICIES.find((policy) => policy.leaveType === type);
-
+  
     if (!policy) return false;
-
+  
     // ACL should only be visible to 'adhoc' users
-    if (type === 'ACL') return role === 'adhoc';
-
+    if (role === 'adhoc') return type === 'ACL';
+  
     // Other leave types should not be available for 'adhoc' users
-    if (role === 'adhoc') return false;
-
+    if (type === 'ACL') return false;
+  
     // Allow if the user's role matches eligibleRoles for the leave type
     return policy.eligibleRoles.includes(role || '');
   });
+
+  React.useEffect(() => {
+    if (role === 'adhoc') {
+      setLeaveType('ACL');
+    }
+  }, [role]);
 
   return (
     <div className="max-w-4xl mx-auto">
