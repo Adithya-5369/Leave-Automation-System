@@ -77,8 +77,14 @@ app.get('/api/auth/leaves/pending/:role', async (req, res) => {
 });
 
 // Health check route to keep the server alive
-app.get('/health', (req, res) => {
-  res.status(200).send('Backend alive 🚀');
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1'); // lightweight DB ping
+    res.status(200).send('Backend + DB alive 🚀');
+  } catch (err) {
+    console.error('Health check failed:', err);
+    res.status(500).send('Database not reachable ❌');
+  }
 });
 
 const PORT = process.env.PORT || 5000;
