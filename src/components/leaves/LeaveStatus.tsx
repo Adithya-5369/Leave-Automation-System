@@ -392,7 +392,7 @@ const mockLeaveApplications: LeaveApplication[] = [
                         {leave.documents.map((file, index) => (
                           <li key={index}>
                             <a
-                              href={`https://zrrqzekygambcttjtaht.supabase.co/storage/v1/object/public/documents/${file}`}
+                              href={file}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 underline hover:text-blue-800"
