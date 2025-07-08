@@ -1,48 +1,43 @@
 const multer = require('multer');
-const supabase = require('../utils/supabaseClient');
 const { v4: uuidv4 } = require('uuid');
+const supabase = require('../utils/supabaseClient');
 
-// Use Multer for parsing files in memory
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({ storage }).array('files');
 
-const uploadToSupabase = async (req, res) => {
-  const files = req.files;
-
-  if (!files || files.length === 0) {
-    return res.status(400).json({ message: 'No files uploaded' });
-  }
-
-  const uploadedUrls = [];
-
-  for (const file of files) {
-    const uniqueName = `${uuidv4()}_${file.originalname}`;
-
-    const { data, error } = await supabase.storage
-      .from(process.env.SUPABASE_BUCKET)
-      .upload(uniqueName, file.buffer, {
-        contentType: file.mimetype,
-        upsert: false,
-      });
-
-    if (error) {
-      console.error('Supabase upload error:', error);
-      return res.status(500).json({ message: 'Upload failed', error });
+const handleFileUpload = (req, res) => {
+  upload(req, res, async function (err) {
+    if (err) {
+      console.error('Multer error:', err);
+      return res.status(500).json({ message: 'File upload failed' });
     }
 
-    const publicURL = supabase.storage
-      .from(process.env.SUPABASE_BUCKET)
-      .getPublicUrl(uniqueName).data.publicUrl;
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No files uploaded' });
+    }
 
-    uploadedUrls.push(publicURL);
-  }
+    const urls = [];
 
-  res.status(200).json({ message: 'Files uploaded', urls: uploadedUrls });
+    for (const file of req.files) {
+      const uniqueName = `${uuidv4()}_${Date.now()}-${file.originalname}`;
+      const { error } = await supabase.storage
+        .from('documents') // your Supabase bucket
+        .upload(uniqueName, file.buffer, {
+          contentType: file.mimetype,
+          upsert: false,
+        });
+
+      if (error) {
+        console.error('Supabase upload error:', error);
+        return res.status(500).json({ message: 'Upload to Supabase failed' });
+      }
+
+      const publicUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/${process.env.SUPABASE_BUCKET}/${uniqueName}`;
+      urls.push(publicUrl);
+    }
+
+    res.status(200).json({ message: 'Files uploaded', urls });
+  });
 };
 
-
-
-module.exports = {
-  upload,
-  uploadToSupabase
-};
+module.exports = { handleFileUpload };

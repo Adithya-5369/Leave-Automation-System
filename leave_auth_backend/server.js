@@ -37,9 +37,8 @@ const authRoutes = require('./routes/authRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+
 app.use('/api', uploadRoutes);
-
-
 app.use('/api/notifications', notificationRoutes);
 app.use('/auth', detectSqlInjection, authRoutes);
 app.use('/auth/leave', detectSqlInjection, leaveRoutes);
