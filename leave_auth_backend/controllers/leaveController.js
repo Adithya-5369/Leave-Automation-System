@@ -18,7 +18,8 @@ const submitLeaveApplication = async (req, res) => {
   } = req.body;
 
   // Extract file names from uploaded files (handled by multer)
-  const documents = req.files?.map(file => file.filename) || [];
+  //const documents = req.files?.map(file => file.filename) || [];
+  const documents = JSON.parse(req.body.documents);
 
   try {
     const result = await pool.query(

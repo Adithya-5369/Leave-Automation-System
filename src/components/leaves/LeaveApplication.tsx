@@ -141,7 +141,7 @@ const LeaveApplication: React.FC = () => {
       formDataToSend.append('applicantDepartment', user?.department || '');
       formDataToSend.append('approvalChain', JSON.stringify(approvalChain));
       formDataToSend.append('currentApprover', approvalChain[0].role);
-      uploadedUrls.forEach(url => formDataToSend.append('documents', url));
+      formDataToSend.append('documents', JSON.stringify(uploadedUrls));
 
       /*documents.forEach((file) => {
         formDataToSend.append('documents', file);
