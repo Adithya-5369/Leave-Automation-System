@@ -27,7 +27,7 @@ const pool = new Pool({
   password: process.env.PG_PASSWORD,
   port: Number(process.env.PG_PORT),
   ssl: {
-    rejectUnauthorized: false, // ✅ required for Supabase
+    rejectUnauthorized: false,
   },
 });
 
@@ -46,9 +46,9 @@ app.use('/api/auth/leaves', leaveRoutes);
 
 
 
-pool.connect()
+/*pool.connect()
   .then(() => console.log('✅ Connected to PostgreSQL'))
-  .catch(err => console.error('❌ PostgreSQL connection error:', err));
+  .catch(err => console.error('❌ PostgreSQL connection error:', err));*/
 
 app.get('/', (req, res) => {
   res.send('Leave Automation Backend API is running 🚀');
@@ -79,13 +79,15 @@ app.get('/api/auth/leaves/pending/:role', async (req, res) => {
 // Health check route to keep the server alive
 app.get('/health', async (req, res) => {
   try {
-    await pool.query('SELECT 1'); // lightweight DB ping
+    await pool.query('SELECT 1');
+    console.log('✅ Health check passed');
     res.status(200).send('Backend + DB alive 🚀');
   } catch (err) {
-    console.error('Health check failed:', err);
+    console.error('❌ Health check failed:', err);
     res.status(500).send('Database not reachable ❌');
   }
 });
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
