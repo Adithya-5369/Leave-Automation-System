@@ -683,7 +683,7 @@ const ApprovalDashboard: React.FC = () => {
                               rel="noopener noreferrer"
                               className="hover:underline"
                             >
-                              {doc}
+                              Document {index + 1}
                             </a>
                           </li>
                         ))}

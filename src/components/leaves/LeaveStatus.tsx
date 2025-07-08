@@ -397,7 +397,7 @@ const mockLeaveApplications: LeaveApplication[] = [
                               rel="noopener noreferrer"
                               className="text-blue-600 underline hover:text-blue-800"
                             >
-                              {file}
+                              Document {index + 1}
                             </a>
                           </li>
                         ))}
