@@ -43,7 +43,7 @@ app.use('/api', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/auth', detectSqlInjection, authRoutes);
 app.use('/auth/leave', detectSqlInjection, leaveRoutes);
-app.use('/uploads', express.static('uploads'));
+// app.use('/uploads', express.static('uploads'));
 app.use('/api/auth/leaves', leaveRoutes);
 
 

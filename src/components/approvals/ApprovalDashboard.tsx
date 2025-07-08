@@ -678,7 +678,7 @@ const ApprovalDashboard: React.FC = () => {
                         {(leave.documents ?? []).map((doc, index) => (
                           <li key={index}>
                             <a
-                              href={`http://localhost:5000/uploads/${doc}`}
+                              href={`https://zrrqzekygambcttjtaht.supabase.co/storage/v1/object/public/documents/${doc}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="hover:underline"

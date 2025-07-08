@@ -125,10 +125,34 @@ const LeaveApplication: React.FC = () => {
       formDataToSend.append('approvalChain', JSON.stringify(approvalChain));
       formDataToSend.append('currentApprover', approvalChain[0].role);
   
-      documents.forEach((file) => {
+      /*documents.forEach((file) => {
         formDataToSend.append('documents', file);
+      });*/
+
+      const fileUploadForm = new FormData();
+      documents.forEach((file) => {
+        fileUploadForm.append('files', file); // match backend route
       });
+
+      let uploadedUrls: string[] = [];
+
+      if (documents.length > 0) {
+        const uploadRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/upload`, {
+          method: 'POST',
+          body: fileUploadForm
+        });
+
+        const uploadData = await uploadRes.json();
+
+        if (!uploadRes.ok) {
+          throw new Error(uploadData.message || 'File upload failed');
+        }
+
+        uploadedUrls = uploadData.urls;
+      }
   
+      formDataToSend.append('documents', JSON.stringify(uploadedUrls));
+
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/leave/apply`, {
         method: 'POST',
         body: formDataToSend,
