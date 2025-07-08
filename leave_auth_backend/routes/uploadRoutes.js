@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { handleFileUpload } = require('../controllers/uploadController');
+const { upload, uploadToSupabase } = require('../controllers/uploadController');
 
-router.post('/', handleFileUpload);
+router.post('/upload', upload.array('documents'), uploadToSupabase);
 
 module.exports = router;
