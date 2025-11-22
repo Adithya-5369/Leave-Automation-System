@@ -31,6 +31,12 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 
 ---
 
+## 📑 Documentation
+- Presentation: [Click Here](https://drive.google.com/file/d/10oRGvYcej-fHLMAjYRk50VPmzgi8Z6uh/view?usp=sharing).
+- Project Report: [Click Here](https://drive.google.com/file/d/1ZWAuu31UjMvT906xUGFbN7_BMRwG1ogv/view?usp=sharing).
+
+---
+
 ## 🛠 Tech Stack
 
 | Layer         | Technology                    |
