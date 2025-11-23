@@ -130,7 +130,7 @@ Developed as part of an EPICS (Engineering Projects in Community Service) Projec
 ## 📬 Contact
 
 📧 muttaadithyasaisrinivas@gmail.com  
-🌐 [Portfolio](https://adithya369.onrender.com) • [LinkedIn](https://linkedin.com/in/adithyasaisrinivas)
+🌐 [Portfolio](https://adithya369.pages.dev) • [LinkedIn](https://linkedin.com/in/adithyasaisrinivas)
 
 ---
 
